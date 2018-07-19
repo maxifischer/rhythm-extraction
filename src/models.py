@@ -1,5 +1,6 @@
 import numpy as np
 na = np.newaxis
+import tensorflow as tf
 
 from preprocessing import patch_augment
 
@@ -33,3 +34,7 @@ class OLSPatchRegressor():
                 y[:,i] = np.squeeze(np.tensordot(X[:,:,i:i+w,:], self.w, axes=[[1, 2, 3], [1,2,3]]))
             
             return y 
+
+
+class ConvNet():
+    def __init__(self, X, y):

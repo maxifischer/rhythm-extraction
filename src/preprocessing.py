@@ -45,6 +45,11 @@ def mean_pool(X, h, w):
     
     return X.reshape(N, NH * h, NW * w, D).reshape(N, NH, h, NW, w, D).mean(axis=(2, 4))
 
+def load_and_preprocess_single_file(path):
+    # gets a sting path
+    # return single file in shape (Frequencies, Timeframes, Channels)
+    return madmom.audio.spectrogram.Spectrogram(path).log()
+
 def spectros_from_dir(audio_dir, max_samples = -1):
 
     # TODO:
@@ -56,11 +61,9 @@ def spectros_from_dir(audio_dir, max_samples = -1):
     if max_samples > 0:
         audio_files = audio_files[:max_samples]
     
-    # TODO: see above, could be handled here
-    spectro_function = lambda path: madmom.audio.spectrogram.Spectrogram(path).log()
 
     # calc spectrogram for all files in the folder
-    spectrograms = np.array([spectro_function(join(audio_dir, af)) for af in audio_files])
+    spectrograms = np.array([load_and_preprocess_single_file(join(audio_dir, af)) for af in audio_files])
 
     # transorm to N, H, W shape
     spectrograms = spectrograms.transpose(0, 2, 1) 
