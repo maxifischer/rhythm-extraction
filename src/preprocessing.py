@@ -9,7 +9,7 @@ na = np.newaxis
 def crop_image_patches(X, h, w, hstride=1, wstride=1, return_2d_patches=False):
     N, H, W, D =  X.shape
     
-    assert(h <= H and w <=W)
+    assert(h <= H and w <= W)
     
     num_patches_h = (H - h) // hstride + 1
     num_patches_w = (W - w) // wstride + 1
@@ -88,7 +88,12 @@ def spectro_mini_db(music_dir, speech_dir, hpool=16, wpool=15, shuffle=True, max
         return X, Y
 
 def spectro_mini_db_patches(music_dir, speech_dir, patch_width, hpool = 16, wpool = 15, hstride=10, wstride=1, shuffle=True, max_samples = -1):
+    
     X, Y = spectro_mini_db(music_dir, speech_dir, hpool=hpool, wpool=wpool, shuffle=False, max_samples = max_samples)
+        
+    return patch_augment(X, Y, patch_width, shuffle, max_samples)
+
+def patch_augment(X, Y, patch_width, shuffle=True, max_samples = -1):
         
     N, H, W, D = X.shape
     
@@ -102,7 +107,6 @@ def spectro_mini_db_patches(music_dir, speech_dir, patch_width, hpool = 16, wpoo
     X_patched_pos = X_patched_pos.reshape(-1, *X_patched_pos.shape[2:])
     X_patched_neg = X_patched_neg.reshape(-1, *X_patched_neg.shape[2:])
 
-    
     num_pos = X_patched_pos.shape[0]
     
     X_patched = np.concatenate([X_patched_pos, X_patched_neg])
@@ -114,3 +118,4 @@ def spectro_mini_db_patches(music_dir, speech_dir, patch_width, hpool = 16, wpoo
     
     else:
         return X_patched, Y_patched
+
