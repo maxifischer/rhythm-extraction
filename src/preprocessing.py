@@ -122,3 +122,23 @@ def patch_augment(X, Y, patch_width, shuffle=True, max_samples = -1):
     else:
         return X_patched, Y_patched
 
+def stride_pad_multiply(signal, multiplier):
+    
+    if len(signal.shape) == 1:
+        signal = signal[:,na]
+    
+    return (signal[:, na,:] * np.ones(multiplier)[na,:,na]).reshape(signal.shape[0] * multiplier, signal.shape[1])
+
+def concatenate_and_upsample(signals):
+    '''
+    signals: list of signals, all lengths need to be multiples of the smallest length
+    '''
+    lengths    = [len(sig) for sig in signals]
+    max_length = max(lengths)
+    
+    # assuming len(signal) % max_length == 0 for all signal in signals
+    upsample_factors = [ int(max_length / leng) for leng in lengths]
+    
+    upsampled_signals = [stride_pad_multiply(signals[i], upsample_factors[i]) for i in range(len(signals))]
+    
+    return np.concatenate(upsampled_signals, axis=1)
