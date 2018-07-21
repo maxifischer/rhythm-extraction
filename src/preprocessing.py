@@ -1,8 +1,14 @@
 from os import listdir
 from os.path import isfile, join
-
+import os
 import numpy as np
 import madmom
+
+from madmom.audio.filters import LogarithmicFilterbank
+from madmom.features.beats import RNNBeatProcessor
+from madmom.features.downbeats import RNNDownBeatProcessor, DBNDownBeatTrackingProcessor
+from madmom.features.onsets import SpectralOnsetProcessor, RNNOnsetProcessor, CNNOnsetProcessor
+
 
 na = np.newaxis
 
@@ -163,3 +169,68 @@ def concatenate_and_resample(signals, sample_down=True):
      
 
        # upsampled_signals = [stride_pad_multiply(signals[i], upsample_factors[i]) for i in range(len(signals))]
+
+def save_to_disk(X, y, file_name):
+    base = "../data/processed"
+    os.makedirs(base, exist_ok=True)
+    x_path = join(base, file_name+"_X")
+    y_path = join(base, file_name+"_y")
+    np.save(x_path, X)
+    np.save(y_path, y)
+
+def load_rhythm_db_from_disk(file_name):
+    base = "../data/processed"
+    x_path = join(base, file_name+"_X.npy")
+    y_path = join(base, file_name+"_y.npy")
+    return np.load(x_path), np.load(y_path)
+
+processors = [SpectralOnsetProcessor(),
+    RNNOnsetProcessor(),
+    CNNOnsetProcessor(),
+    SpectralOnsetProcessor(onset_method='superflux', fps=200, filterbank=LogarithmicFilterbank, num_bands=24, log=np.log10),
+    RNNDownBeatProcessor(),
+    lambda sig: np.array(RNNBeatProcessor(post_processor=None)(sig)).T
+    ]
+
+def rhythm_features_for_signal(signal):
+    rhythm_features = [process(signal) for process in processors]
+    return concatenate_and_resample(rhythm_features)
+
+def load_and_rhythm_preprocess(audio_dir, max_samples=-1):
+    audio_files = [f for f in listdir(audio_dir) if isfile(join(audio_dir, f))]
+
+    if max_samples > 0:
+        audio_files = audio_files[:max_samples]
+
+    processed = []
+    for file_name in audio_files:
+        path = join(audio_dir, file_name)
+        signal = madmom.audio.Signal(path)
+        processed.append(rhythm_features_for_signal(signal))
+    return processed
+
+def load_rhythm_feature_db(music_dir, speech_dir, max_samples=-1, reload=False):
+    file_name = (music_dir + speech_dir).replace("/", "-").replace(".", "")
+
+    try:
+        assert not reload
+        return load_rhythm_db_from_disk(file_name)
+        print("loaded from disk")
+    except (FileNotFoundError, AssertionError):
+        print("generate dataset")
+
+    music = load_and_rhythm_preprocess(music_dir, max_samples)
+    music_labels = [1] * len(music)
+    speech = load_and_rhythm_preprocess(speech_dir, max_samples)
+    speech_labels = [-1] * len(music)
+
+    X = np.array(music + speech)
+    y = np.array(music_labels + speech_labels)
+    perm = np.random.permutation(len(y))
+    X, y = X[perm], y[perm]
+    print("X", X.shape)
+    print("y", y.shape)
+    save_to_disk(X, y, file_name)
+
+    return X, y
+
