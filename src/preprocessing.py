@@ -137,7 +137,7 @@ def mean_pool_signal(signal, factor):
     if len(signal.shape) == 1:
         signal=signal[:,na]
     L, D = signal.shape
-    return signal.reshape(L//factor, factor, D).mean(axis=2)
+    return signal.reshape(L//factor, factor, D).mean(axis=1)
 
 def concatenate_and_resample(signals, sample_down=True):
     '''
