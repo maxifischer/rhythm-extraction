@@ -43,7 +43,7 @@ def mean_pool(X, h, w):
     NH = H // h
     NW = W // w
     
-    return X.reshape(N, NH * h, NW * w, D).reshape(N, NH, h, NW, w, D).mean(axis=(2, 4))
+    return X.reshape(N, NH, h, NW, w, D).mean(axis=(2, 4))
 
 def load_and_preprocess_single_file(path):
     # gets a sting path
