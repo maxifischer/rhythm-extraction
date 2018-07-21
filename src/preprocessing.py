@@ -129,16 +129,37 @@ def stride_pad_multiply(signal, multiplier):
     
     return (signal[:, na,:] * np.ones(multiplier)[na,:,na]).reshape(signal.shape[0] * multiplier, signal.shape[1])
 
-def concatenate_and_upsample(signals):
+def mean_pool_signal(signal, factor):
+    '''
+    mean pool (L, D) signal assuming it is a multiple of factor
+    '''
+
+    if len(signal.shape) == 1:
+        signal=signal[:,na]
+    L, D = signal.shape
+    return signal.reshape(L//factor, factor, D).mean(axis=2)
+
+def concatenate_and_resample(signals, sample_down=True):
     '''
     signals: list of signals, all lengths need to be multiples of the smallest length
     '''
     lengths    = [len(sig) for sig in signals]
-    max_length = max(lengths)
     
-    # assuming len(signal) % max_length == 0 for all signal in signals
-    upsample_factors = [ int(max_length / leng) for leng in lengths]
-    
-    upsampled_signals = [stride_pad_multiply(signals[i], upsample_factors[i]) for i in range(len(signals))]
-    
-    return np.concatenate(upsampled_signals, axis=1)
+    if sample_down:
+        min_length = min(lengths)
+        resample_factors = [ int(leng / min_length) for leng in lengths]
+ 
+        downsampled_signals = [mean_pool_signal(signals[i], resample_factors[i]) for i in range(len(signals))]
+
+        return np.concatenate(downsampled_signals, axis=1) 
+
+    else:
+        max_length = max(lengths)
+        resample_factors = [ int(max_length/ leng) for leng in lengths]
+ 
+        upsampled_signals = [stride_pad_multiply(signals[i], resample_factors[i]) for i in range(len(signals))]
+
+        return np.concatenate(upsampled_signals, axis=1) 
+     
+
+       # upsampled_signals = [stride_pad_multiply(signals[i], upsample_factors[i]) for i in range(len(signals))]
