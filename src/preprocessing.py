@@ -6,9 +6,11 @@ import madmom
 
 from madmom.audio.filters import LogarithmicFilterbank
 from madmom.features.beats import RNNBeatProcessor
-from madmom.features.downbeats import RNNDownBeatProcessor, DBNDownBeatTrackingProcessor
+#from madmom.features.downbeats import RNNDownBeatProcessor, DBNDownBeatTrackingProcessor
 from madmom.features.onsets import SpectralOnsetProcessor, RNNOnsetProcessor, CNNOnsetProcessor
-
+from madmom.audio.stft import ShortTimeFourierTransform
+from madmom.audio.signal import FramedSignal, Signal
+from madmom.audio.spectrogram import LogarithmicSpectrogram, FilteredSpectrogram, Spectrogram
 
 na = np.newaxis
 
@@ -51,35 +53,49 @@ def mean_pool(X, h, w):
     
     return X.reshape(N, NH, h, NW, w, D).mean(axis=(2, 4))
 
-def load_and_preprocess_single_file(path):
-    # gets a sting path
-    # return single file in shape (Frequencies, Timeframes, Channels)
-    return madmom.audio.spectrogram.Spectrogram(path).log()
+def get_spectrogram(path, filtered=True, window=np.hanning, fft_size=1024, sample_rate=None):
+    ''' 
+        path: single file path
+        filtered: generate FilteredSpectrogram or normal one
+        
+        return numpy array shaped (Frequencies, Timeframes, Channels)
+        (log-spaced (Filtered)Spectrogram from madmom)
+    '''
+    # sample_rate=None takes original sample_rate
+    signal = Signal(path, sample_rate=sample_rate)
+    frames = FramedSignal(signal)
+    stft = ShortTimeFourierTransform(frames, window=window, fft_size=fft_size)
+    spectro = LogarithmicSpectrogram(stft)
+    if filtered:
+        return FilteredSpectrogram(spectro)
+    else:
+        return spectro
 
-def spectros_from_dir(audio_dir, max_samples = -1):
-
+def get_dir_spectrograms(audio_dir, num_samples = -1):
+    '''
+        audio_dir: directory path
+        num_samples: number of tracks sampled from directory
+        
+        return numpy array of (Frequencies, Timeframes, Channels)
+    '''
     # TODO:
     # add STFT options to the spectrogram (window size etc)
     # add possibility to use different options at the same time (add depth dimension, is there a problem with the resulting shape?)
-    
-    audio_files = [f for f in listdir(audio_dir) if isfile(join(audio_dir, f))]
-    
-    if max_samples > 0:
-        audio_files = audio_files[:max_samples]
-    
+
+    audio_files = [f for f in listdir(audio_dir) if isfile(join(audio_dir, f))][:num_samples]
 
     # calc spectrogram for all files in the folder
-    spectrograms = np.array([load_and_preprocess_single_file(join(audio_dir, af)) for af in audio_files])
+    spectrograms = np.array([get_spectrogram(join(audio_dir, af)) for af in audio_files])
 
-    # transorm to N, H, W shape
+    # transform to N, H, W shape
     spectrograms = spectrograms.transpose(0, 2, 1) 
     
     return spectrograms
 
-def spectro_mini_db(music_dir, speech_dir, hpool=16, wpool=15, shuffle=True, max_samples = -1):
+def get_dataset(music_dir, speech_dir, hpool=16, wpool=15, shuffle=True, num_samples = -1):
     
-    music_spectros  = spectros_from_dir(music_dir, max_samples)
-    speech_spectros = spectros_from_dir(speech_dir, max_samples)
+    music_spectros  = get_dir_spectrograms(music_dir, num_samples)
+    speech_spectros = get_dir_spectrograms(speech_dir, num_samples)
     
     X = np.concatenate([music_spectros, speech_spectros], axis=0)[:,:,:,na]
     
@@ -149,11 +165,11 @@ def concatenate_and_resample(signals, sample_down=True):
     '''
     signals: list of signals, all lengths need to be multiples of the smallest length
     '''
-    lengths    = [len(sig) for sig in signals]
+    lengths = [len(sig) for sig in signals]
     
     if sample_down:
         min_length = min(lengths)
-        resample_factors = [ int(leng / min_length) for leng in lengths]
+        resample_factors = [int(leng/min_length) for leng in lengths]
  
         downsampled_signals = [mean_pool_signal(signals[i], resample_factors[i]) for i in range(len(signals))]
 
@@ -161,7 +177,7 @@ def concatenate_and_resample(signals, sample_down=True):
 
     else:
         max_length = max(lengths)
-        resample_factors = [ int(max_length/ leng) for leng in lengths]
+        resample_factors = [int(max_length/leng) for leng in lengths]
  
         upsampled_signals = [stride_pad_multiply(signals[i], resample_factors[i]) for i in range(len(signals))]
 
@@ -188,28 +204,28 @@ processors = [SpectralOnsetProcessor(),
     RNNOnsetProcessor(),
     CNNOnsetProcessor(),
     SpectralOnsetProcessor(onset_method='superflux', fps=200, filterbank=LogarithmicFilterbank, num_bands=24, log=np.log10),
-    RNNDownBeatProcessor(),
-    lambda sig: np.array(RNNBeatProcessor(post_processor=None)(sig)).T
+    #RNNDownBeatProcessor(),
+    #lambda sig: np.array(RNNBeatProcessor(post_processor=None)(sig)).T
     ]
 
 def rhythm_features_for_signal(signal):
     rhythm_features = [process(signal) for process in processors]
     return concatenate_and_resample(rhythm_features)
 
-def load_and_rhythm_preprocess(audio_dir, max_samples=-1):
+def load_and_rhythm_preprocess(audio_dir, num_samples=-1):
     audio_files = [f for f in listdir(audio_dir) if isfile(join(audio_dir, f))]
 
-    if max_samples > 0:
-        audio_files = audio_files[:max_samples]
+    if num_samples > 0:
+        audio_files = audio_files[:num_samples]
 
     processed = []
     for file_name in audio_files:
         path = join(audio_dir, file_name)
-        signal = madmom.audio.Signal(path)
+        signal = Signal(path)
         processed.append(rhythm_features_for_signal(signal))
     return processed
 
-def load_rhythm_feature_db(music_dir, speech_dir, max_samples=-1, reload=False):
+def load_rhythm_feature_db(music_dir, speech_dir, num_samples=-1, reload=False):
     file_name = (music_dir + speech_dir).replace("/", "-").replace(".", "")
 
     try:
@@ -219,9 +235,9 @@ def load_rhythm_feature_db(music_dir, speech_dir, max_samples=-1, reload=False):
     except (FileNotFoundError, AssertionError):
         print("generate dataset")
 
-    music = load_and_rhythm_preprocess(music_dir, max_samples)
+    music = load_and_rhythm_preprocess(music_dir, num_samples)
     music_labels = [1] * len(music)
-    speech = load_and_rhythm_preprocess(speech_dir, max_samples)
+    speech = load_and_rhythm_preprocess(speech_dir, num_samples)
     speech_labels = [-1] * len(music)
 
     X = np.array(music + speech)
