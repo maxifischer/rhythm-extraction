@@ -4,6 +4,8 @@ import os
 import numpy as np
 import madmom
 
+import time
+
 from madmom.audio.filters import LogarithmicFilterbank
 from madmom.features.beats import RNNBeatProcessor
 from madmom.features.downbeats import RNNDownBeatProcessor, DBNDownBeatTrackingProcessor
@@ -197,16 +199,25 @@ def rhythm_features_for_signal(signal):
     return concatenate_and_resample(rhythm_features)
 
 def load_and_rhythm_preprocess(audio_dir, max_samples=-1):
+    print('...load and preprocess files from folder')
     audio_files = [f for f in listdir(audio_dir) if isfile(join(audio_dir, f))]
 
     if max_samples > 0:
         audio_files = audio_files[:max_samples]
 
+    num_files = len(audio_files)
+
     processed = []
-    for file_name in audio_files:
+    for ind, file_name in enumerate(audio_files):
+        strt = time.time()
+        
         path = join(audio_dir, file_name)
         signal = madmom.audio.Signal(path)
         processed.append(rhythm_features_for_signal(signal))
+       
+        stp = time.time()
+        print('finished treating file {}/{} in {:4.3f}s'.format(ind+1, num_files, stp-strt))
+        
     return processed
 
 def load_rhythm_feature_db(music_dir, speech_dir, max_samples=-1, reload=False):
