@@ -96,7 +96,17 @@ def get_dir_spectrograms(audio_dir, num_samples = -1):
     
     return spectrograms
 
-def get_dataset(music_dir, speech_dir, hpool=16, wpool=15, shuffle=True, num_samples = -1):
+def get_dataset(music_dir, speech_dir, hpool=16, wpool=15, shuffle=True, num_samples = -1, reload=False):
+
+    file_name = (music_dir + speech_dir).replace("/", "-").replace(".", "")+"_raw"
+
+    try:
+        assert not reload
+        X, Y = load_db_from_disk(file_name)
+        print("loaded from disk")
+        return X, Y
+    except (FileNotFoundError, AssertionError):
+        print("generate dataset")
     
     music_spectros  = get_dir_spectrograms(music_dir, num_samples)
     speech_spectros = get_dir_spectrograms(speech_dir, num_samples)
@@ -111,10 +121,11 @@ def get_dataset(music_dir, speech_dir, hpool=16, wpool=15, shuffle=True, num_sam
     
     if shuffle:
         I = np.random.permutation(X.shape[0])
-        
-        return X[I], Y[I]
-    else:
-        return X, Y
+        X, Y = X[I], Y[I]
+
+    save_to_disk(X, Y, file_name)
+    return X, Y
+
 
 def spectro_mini_db_patches(music_dir, speech_dir, patch_width, hpool = 16, wpool = 15, hstride=10, wstride=1, shuffle=True, max_samples = -1):
     
@@ -198,7 +209,7 @@ def save_to_disk(X, y, file_name):
     np.save(x_path, X)
     np.save(y_path, y)
 
-def load_rhythm_db_from_disk(file_name):
+def load_db_from_disk(file_name):
     base = "../data/processed"
     x_path = join(base, file_name+"_X.npy")
     y_path = join(base, file_name+"_y.npy")
@@ -243,7 +254,7 @@ def load_rhythm_feature_db(music_dir, speech_dir, num_samples=-1, reload=False):
 
     try:
         assert not reload
-        return load_rhythm_db_from_disk(file_name)
+        return load_db_from_disk(file_name)
         print("loaded from disk")
     except (FileNotFoundError, AssertionError):
         print("generate dataset")
