@@ -84,7 +84,9 @@ def get_dir_spectrograms(audio_dir, num_samples = -1):
     # add STFT options to the spectrogram (window size etc)
     # add possibility to use different options at the same time (add depth dimension, is there a problem with the resulting shape?)
 
-    audio_files = [f for f in listdir(audio_dir) if isfile(join(audio_dir, f))][:num_samples]
+    audio_files = [f for f in listdir(audio_dir) if isfile(join(audio_dir, f))]
+    if num_samples>0:
+        audio_files = audio_files[:num_samples]
 
     # calc spectrogram for all files in the folder
     spectrograms = np.array([get_spectrogram(join(audio_dir, af)) for af in audio_files])
@@ -218,8 +220,8 @@ def load_and_rhythm_preprocess(audio_dir, max_samples=-1):
     print('...load and preprocess files from folder')
     audio_files = [f for f in listdir(audio_dir) if isfile(join(audio_dir, f))]
 
-    if num_samples > 0:
-        audio_files = audio_files[:num_samples]
+    if max_samples > 0:
+        audio_files = audio_files[:max_samples]
 
     num_files = len(audio_files)
 
