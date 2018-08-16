@@ -1,6 +1,6 @@
 import numpy as np
 
-def cv(X, y, method, train_fun, evaluation=accuracy, nfolds=10, nrepetitions=5, shuffle=True):
+def cv(X, y, method, train_fun, nfolds=10, nrepetitions=5, shuffle=True):
         evals = []
         # evals_reinit = []
         N = X.shape[0]
