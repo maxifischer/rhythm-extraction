@@ -77,17 +77,17 @@ def get_spectrogram(path, sample_rate=None, fps=None, window=np.hanning, fft_siz
             spectros.append(filtered_spectro)
         else:
             spectros.append(spectro)
-    return spectros
 
-def fill_zeros(spectros):
-    ref = spectros[-1]
-    same_len_spectros = []
-    for spectro in spectros:
-        if ref.shape[1] == spectro.shape[1]:
-            same_len_spectros.append(spectro)
-        zeros_to_add = np.zeros((ref.shape[0], ref.shape[1]-spectro.shape[1]))
-        same_len_spectros.append(np.concatenate((spectro, zeros_to_add), axis=1))
-    return same_len_spectros
+    # bring all spectros to the same shape, concat them and return them
+    num_frequencies = max([spectro.shape[1] for spectro in spectros])
+    num_channels = len(spectros)
+    num_timestamps = spectros[0].shape[0]
+
+    final_spectro = np.zeros([num_frequencies, num_timestamps, num_channels])
+    for channel, spectro in enumerate(spectros):
+        final_spectro[:spectro.shape[1], :, channel] = spectro.T
+    return final_spectro
+
 
 def get_dir_spectrograms(audio_dir, num_samples = -1, **kwargs):
     '''
@@ -105,17 +105,7 @@ def get_dir_spectrograms(audio_dir, num_samples = -1, **kwargs):
         audio_files = audio_files[:num_samples]
 
     # calc spectrogram for all files in the folder
-    spectrograms = [fill_zeros(get_spectrogram(join(audio_dir, af), **kwargs)) for af in audio_files]
-    #print(spectrograms)
-    print(spectrograms[0][0].shape)
-    print(spectrograms[0][1].shape)
-    spectrograms = np.array(np.stack(spectrograms, axis=2))
-    print(spectrograms.shape)
-
-    (3, 3000, 10, 1024)
-    # transform to N, H, W, C shape
-    spectrograms = spectrograms.transpose(1, 3, 2, 0)
-    print(spectrograms.shape)
+    spectrograms = np.array([get_spectrogram(join(audio_dir, af), **kwargs) for af in audio_files])
     
     return spectrograms
 
@@ -136,7 +126,6 @@ def get_dataset(music_dir, speech_dir, hpool=16, wpool=15, shuffle=True, num_sam
     
     #print(music_spectros.shape)
     X = np.concatenate([music_spectros, speech_spectros], axis=0)#[:,:,:,:,na]
-    print(X.shape)
     # create labels, 1 for music, -1 for speech
     Y = ((np.arange(X.shape[0]) < music_spectros.shape[0]) - .5) * 2
     
