@@ -105,7 +105,11 @@ def get_dir_spectrograms(audio_dir, num_samples = -1, **kwargs):
         audio_files = audio_files[:num_samples]
 
     # calc spectrogram for all files in the folder
-    spectrograms = np.array([get_spectrogram(join(audio_dir, af), **kwargs) for af in audio_files])
+    spectrograms = []
+    for i, af in enumerate(audio_files):
+        print("Load file {}/{} in {}".format(i+1, len(audio_files), audio_dir))
+        spectrograms.append(get_spectrogram(join(audio_dir, af), **kwargs))
+    spectrograms = np.array(spectrograms)
     
     return spectrograms
 
