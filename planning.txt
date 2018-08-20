@@ -1,0 +1,17 @@
+1. Spectros mit mehr frequencies
+2. Modelle mit größerer time filter width
+3. LRP shit für channel
+
+paper planning:
+--------------
+- false positives / false negatives vergleichen, macht einer der algs mehr Fehler in eine Richtung?
+
+                - bias variance:
+                    Gegen Model, Klasse eines Audio Stücks und Länge des Audio Stücks können wir mean und varianz der Verteilung der Labels pro Timestemp berechnen. Davon können wir die Verteilung der endgültigen prediction (mean über timestamps) ableiten und approximativ die Wahrscheinlichkeit einer korrekten prediction in Abhängigkeit der Länge des Musikstücks und der prior probability von Musik/Speech für jedes Model angeben
+
+- Welche features sind geeignet?
+    Abschnitt über lineare Modelle: On spectogramm: Filter plotten / Auf rhythm features: histogramm über weights von verschiednen Channels (Welche rhythm features sind wichtig?)
+
+                - es sieht aus als ob die prediction curves für musik/sprache sich stark unterscheiden: die predictions für sprache scheinen wesentlich mehr varianz entlang der Zeitachse zu haben. 
+                    -> könnte man die Entscheidung anstatt eines mean thresholds auch über eine funktion von mean und varianz treffen?
+
