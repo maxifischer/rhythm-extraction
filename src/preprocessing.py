@@ -113,7 +113,11 @@ def get_dir_spectrograms(audio_dir, num_samples = -1, **kwargs):
     
     return spectrograms
 
-def get_dataset(music_dir, speech_dir, hpool=16, wpool=15, shuffle=True, num_samples = -1, reload=False, **kwargs):
+
+
+def get_dataset(music_dir, speech_dir, hpool=16, wpool=15, shuffle=True,
+                num_samples = -1, reload=False, process_dir=get_dir_spectrograms,
+                **kwargs):
 
     file_name = (music_dir + speech_dir).replace("/", "-").replace(".", "")+"_raw"
 
@@ -125,8 +129,8 @@ def get_dataset(music_dir, speech_dir, hpool=16, wpool=15, shuffle=True, num_sam
     except (FileNotFoundError, AssertionError):
         print("generate dataset")
     
-    music_spectros  = get_dir_spectrograms(music_dir, num_samples, **kwargs)
-    speech_spectros = get_dir_spectrograms(speech_dir, num_samples, **kwargs)
+    music_spectros  = process_dir(music_dir, num_samples, **kwargs)
+    speech_spectros = process_dir(speech_dir, num_samples, **kwargs)
     
     #print(music_spectros.shape)
     X = np.concatenate([music_spectros, speech_spectros], axis=0)#[:,:,:,:,na]
@@ -290,4 +294,94 @@ def load_rhythm_feature_db(music_dir, speech_dir, num_samples=-1, reload=False):
     save_to_disk(X, y, file_name)
 
     return X, y
+
+
+
+class RhythmData():
+    def __init__(self, music_dir, speech_dir):
+        X, Y = load_rhythm_feature_db(music_dir, speech_dir, num_samples=-1)
+
+        # change -1, 1 labels to 0,1
+        Y = (Y + 1) / 2 
+
+        # X is in (N,L,D) format
+
+        X = X[:,na,:,:] # dont conv over the number of models
+        self.X, self.Y = X, Y 
+
+        self.num_frequencies = X.shape[1]
+        self.num_timesteps   = X.shape[2]
+        self.num_channels    = X.shape[3]
+        self.input_shape = X[0].shape
+
+
+class SpectroData():
+    def __init__(self, music_dir, speech_dir):
+        max_samples = -1
+
+        X, Y = get_dataset(music_dir, speech_dir, process_dir=get_dir_spectrograms,
+                           hpool=0, wpool=0, 
+                           num_samples=max_samples, shuffle=True, reload=False,
+                           window=np.hanning, fps=100, num_bands=3, fmin=30, fmax=17000,
+                           fft_sizes=[1024, 2048, 4096]
+                          )
+
+        Y = (Y + 1) / 2 
+        self.X, self.Y = X, Y
+
+        self.num_frequencies = X.shape[1]
+        self.num_timesteps   = X.shape[2]
+        self.num_channels    = X.shape[3]
+        self.input_shape = X[0].shape
+
+
+def get_mir(path):
+    # Spectral Flux/Flatness, MFCCs, SDCs
+    raise NotImplementedError
+
+def get_dir_mir(audio_dir, num_samples = -1):
+    '''
+        audio_dir: directory path
+        num_samples: number of tracks sampled from directory
+        
+        return numpy array of (Frequencies, Timeframes, Channels)
+    '''
+    # TODO:
+    # add STFT options to the spectrogram (window size etc)
+    # add possibility to use different options at the same time (add depth dimension, is there a problem with the resulting shape?)
+
+    audio_files = [f for f in listdir(audio_dir) if isfile(join(audio_dir, f))]
+    if num_samples>0:
+        audio_files = audio_files[:num_samples]
+
+    # calc spectrogram for all files in the folder
+    mirs = []
+    for i, af in enumerate(audio_files):
+        print("Load file {}/{} in {}".format(i+1, len(audio_files), audio_dir))
+        mirs.append(get_mir(join(audio_dir, af)))
+    mirs = np.array(mirs)
+    
+    return mirs
+
+
+class MIRData():
+    def __init__(self, music_dir, speech_dir):
+
+        max_samples = -1
+
+        X, Y = get_dataset(music_dir, speech_dir, process_dir=get_dir_mir,
+                           hpool=0, wpool=0, 
+                           num_samples=max_samples, shuffle=True, reload=False,
+                           window=np.hanning, fps=100, num_bands=3, fmin=30, fmax=17000,
+                           fft_sizes=[1024, 2048, 4096]
+                          )
+
+        Y = (Y + 1) / 2 
+        self.X, self.Y = X, Y
+
+        self.num_frequencies = X.shape[1]
+        self.num_timesteps   = X.shape[2]
+        self.num_channels    = X.shape[3]
+        self.input_shape = X[0].shape
+
 
