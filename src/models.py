@@ -3,6 +3,13 @@ na = np.newaxis
 
 from preprocessing import patch_augment
 
+import keras
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, Flatten, Lambda
+from keras.layers import Conv2D, MaxPooling2D
+from keras import backend as K
+from keras.models import Model
+
 class OLSPatchRegressor():
     def __init__(self):
         self.w = None
@@ -33,3 +40,55 @@ class OLSPatchRegressor():
                 y[:,i] = np.squeeze(np.tensordot(X[:,:,i:i+w,:], self.w, axes=[[1, 2, 3], [1,2,3]]))
             
             return y 
+
+# KERAS MODELS
+def get_keras_model(modelname, input_shape):
+
+    num_frequencies = input_shape[0]
+
+    if modelname == 'simple_cnn':
+
+        time_filter_size=3
+
+        # simple cnn with very narrow filters in the time axis
+        model = Sequential()
+        model.add(MaxPooling2D(pool_size=(1, 3), input_shape=input_shape))
+        model.add(Conv2D(32, kernel_size=(num_frequencies, time_filter_size),
+                         activation='relu'))
+
+        model.add(Conv2D(1, kernel_size=(1, 1), activation='sigmoid'))
+        model.add(Lambda(lambda x: K.mean(x, axis=[1,2])))
+
+        model.compile(loss=keras.losses.binary_crossentropy,
+                      optimizer=keras.optimizers.Adadelta(),
+                      metrics=['accuracy'])
+        
+        return model
+
+    elif modelname == 'linear':
+        # linear model
+
+        time_filter_size = 3
+
+        model = Sequential()
+        model.add(Conv2D(1, kernel_size=(num_frequencies, time_filter_size),
+                         activation='sigmoid',
+                         input_shape=input_shape))
+
+        model.add(Lambda(lambda x: K.mean(x, axis=[1,2])))
+
+        model.compile(loss=keras.losses.binary_crossentropy,
+                      optimizer=keras.optimizers.Adadelta(),
+                      metrics=['accuracy'])
+        
+        return model
+
+    else:
+        print('modelname unknown')
+        return None
+
+def reset_weights(model):
+    session = K.get_session()
+    for layer in model.layers: 
+        if hasattr(layer, 'kernel_initializer'):
+            layer.kernel.initializer.run(session=session)
