@@ -43,6 +43,13 @@ na = np.newaxis
 
 model_names = ["linear", "simple_cnn"]
 
+
+"""
+TODO:
+- a way to save results, maybe in pandas
+- a way to get load or (train and save) a model for the evaluation stuff
+"""
+
 def cv_experiment(data, model_name, col_test_data):
    
     epochs=20
@@ -65,8 +72,30 @@ def cv_experiment(data, model_name, col_test_data):
     return cvacc
 
     # do cv on the model
-
     # do cv on TimestepAggregator model
+    pass
+
+
+"""
+The following stuff happens for trained models
+"""
+def important_channels(data, model_name, col_test_data):
+    pass
+
+def visualize_prediction_over_time(data, model_name, col_test_data):
+    # plot for some samples the prediction over time, and also for a transition of music to speech
+    # including correlation
+    pass
+
+def analyze_error(data, model_name, col_test_data):
+    # check false positives/false negatives
+    # plot the expected probability of false positives/false negatives under the iid assumption for different timesteps
+    pass
+
+def visualize_filter(data, model_name, col_test_data):
+    if data.__class__ != SpectroData: return
+    pass
+
 
 def run_on_all(experiment):
     results = {}
