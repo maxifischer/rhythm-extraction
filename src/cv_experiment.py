@@ -106,22 +106,17 @@ def run_on_all(experiment):
         for Preprocessor in [RhythmData, SpectroData]:# , MIRData]:
             data = Preprocessor(**kwargs)
 
-            print(os.getcwd())
-
             col_test_data = Preprocessor(**data_path["columbia-test"])
             for model_name in model_names:
+                results['data_name'] = {}
                 print("---------------- Experiment for {} on {}({})".format(
-                    model_name, Preprocessor.__class__.__name__, data_name))
+                    model_name, Preprocessor.__name__, data_name))
                 result = experiment(data, model_name, col_test_data)
-                results.append(result)
+                results['data_name']['model_name'] = result
                 print(result)
 
     return results
 
-#  def run_on_one(experiment, data_name):
-
-
-    
 
 if __name__ == "__main__":
     run_on_all(cv_experiment)
