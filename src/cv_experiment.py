@@ -9,7 +9,7 @@ import madmom
 import sys
 sys.path.append('../src')
 from preprocessing import RhythmData, SpectroData, MIRData
-from models import OLSPatchRegressor, get_keras_model, reset_weights
+from models import OLSPatchRegressor, get_model, reset_weights
 from utils import cv
 import visualize
 
@@ -41,7 +41,7 @@ data_path = {
 
 na = np.newaxis
 
-model_names = ["linear", "simple_cnn"]
+model_names = ["linear-linvar", "linear", "simple_cnn"]
 
 
 """
@@ -52,13 +52,13 @@ TODO:
 
 def cv_experiment(data, model_name, col_test_data):
    
-    epochs=20
-    batch_size=16
+    epochs=5
+    batch_size=8
 
     input_shape = data.X.shape[1:]
-    model = get_keras_model(model_name, input_shape)
+    model = get_model(model_name, input_shape)
 
-    def get_model(model=model):
+    def get_fresh_model(model=model):
         reset_weights(model)
         return model
 
@@ -67,7 +67,7 @@ def cv_experiment(data, model_name, col_test_data):
                                         epochs=epochs,
                                         verbose=0)
 
-    cvacc = cv(data.X, data.Y, get_model, train_model, nfolds=5, nrepetitions=1)
+    cvacc = cv(data.X, data.Y, get_fresh_model, train_model, nfolds=5, nrepetitions=1)
 
     return cvacc
 
