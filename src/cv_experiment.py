@@ -103,7 +103,7 @@ def run_on_all(experiment):
 
         if data_name == "columbia-test": continue
         if data_name == "columbia-train": continue
-        for Preprocessor in [RhythmData, SpectroData]:# , MIRData]:
+        for Preprocessor in [RhythmData, SpectroData , MIRData]:
             data = Preprocessor(**kwargs)
 
             col_test_data = Preprocessor(**data_path["columbia-test"])

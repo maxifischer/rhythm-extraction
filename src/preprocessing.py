@@ -15,6 +15,8 @@ from madmom.audio.signal import FramedSignal, Signal
 from madmom.audio.spectrogram import LogarithmicSpectrogram, FilteredSpectrogram, Spectrogram
 from madmom.audio.cepstrogram import MFCC
 
+from librosa.feature import spectral_centroid, spectral_bandwidth, spectral_contrast, spectral_flatness, spectral_rolloff, mfcc, rmse, zero_crossing_rate
+
 na = np.newaxis
 
 def crop_image_patches(X, h, w, hstride=1, wstride=1, return_2d_patches=False):
@@ -336,13 +338,15 @@ class SpectroData():
         self.input_shape = X[0].shape
 
 
-def get_mir(spectrogram):
+def get_mir(spectrogram, madmom=True, librosa=True):
     # Spectral Flux/Flatness, MFCCs, SDCs
-    flux = spectral_flux(spectrogram)
-    sflux = superflux(spectrogram)
-    cflux = complex_flux(spectrogram)
-    mfcc = MFCC(spectrogram)
-    return np.vstack((flux, sflux, cflux, mfcc))
+    all_features = []
+    if madmom:
+        all_features.extend([spectral_flux(spectrogram), superflux(spectrogram), complex_flux(spectrogram), MFCC(spectrogram)])
+    
+    if librosa:
+        all_features.extend([spectral_centroid, spectral_bandwidth, spectral_contrast, spectral_flatness, spectral_rolloff, mfcc, rmse, zero_crossing_rate])
+    return np.vstack(all_features)
 
 def get_dir_mir(audio_dir, num_samples = -1):
     '''
@@ -381,15 +385,15 @@ class MIRData():
                            window=np.hanning, fps=100, num_bands=24, fmin=30, fmax=17000,
                            fft_sizes=[1024, 2048, 4096]
                           )
-        X = [get_mir(spectro) for spectro in X]
+        X = [get_mir(spectro, False, True) for spectro in X]
 
         Y = (Y + 1) / 2 
         self.X, self.Y = X, Y
 
-        self.spectral_flux = X[0]
-        self.super_flux = X[1]
-        self.complex_flux = X[2]
-        self.mfcc = X[3]
+        #self.spectral_flux = X[0]
+        #self.super_flux = X[1]
+        #self.complex_flux = X[2]
+        #self.mfcc = X[3]
         #self.num_frequencies = X.shape[1]
         #self.num_timesteps   = X.shape[2]
         #self.num_channels    = X.shape[3]
