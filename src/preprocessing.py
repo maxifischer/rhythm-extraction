@@ -341,12 +341,21 @@ class SpectroData():
 def get_mir(audio_path):
     # Spectral Flux/Flatness, MFCCs, SDCs
     spectrogram = madmom.audio.spectrogram.Spectrogram(audio_path, frame_size=2048, hop_size=200, fft_size=4096)
+    audio = madmom.audio.signal.Signal(audio_path, dtype=float)
+   
     all_features = []
+    
     # madmom features
     all_features.extend([spectral_flux(spectrogram), superflux(spectrogram), complex_flux(spectrogram)]) #, MFCC(spectrogram)])
     
+    # mfcc still wrong shape as it is a 2 array
+    
     # librosa features
-    all_features.extend([spectral_centroid, spectral_bandwidth, spectral_contrast, spectral_flatness, spectral_rolloff, mfcc, rmse, zero_crossing_rate])
+    libr_features = [spectral_centroid(audio), spectral_bandwidth(audio), spectral_flatness(audio), spectral_rolloff(audio), rmse(audio), zero_crossing_rate(audio)]#, mfcc(audio)])
+    for libr in libr_features:
+        all_features.append(np.squeeze(libr, axis=0))
+    for feature in all_features:
+        print(feature.shape)
     X = np.vstack(all_features)
     print("single audio shape", X.shape)
     return X
