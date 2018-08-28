@@ -117,15 +117,15 @@ def get_dir_spectrograms(audio_dir, num_samples = -1, **kwargs):
 
 
 def get_dataset(music_dir, speech_dir, hpool=16, wpool=15, shuffle=True,
-                num_samples = -1, reload=False, process_dir=get_dir_spectrograms,
+                num_samples = -1, reload=False, process_dir=get_dir_spectrograms, file_suffix="_raw",
                 **kwargs):
 
-    file_name = (music_dir + speech_dir).replace("/", "-").replace(".", "")+"_raw"
+    file_name = (music_dir + speech_dir).replace("/", "-").replace(".", "")+ file_suffix
 
     try:
         assert not reload
         X, Y = load_db_from_disk(file_name)
-        print("loaded from disk")
+        print("loaded from disk:", file_name)
         return X, Y
     except (FileNotFoundError, AssertionError):
         print("generate dataset")
@@ -336,13 +336,16 @@ class SpectroData():
         self.input_shape = X[0].shape
 
 
-def get_mir(spectrogram):
+def get_mir(audio_path):
+    spectrogram = madmom.audio.spectrogram.Spectrogram(audio_path, frame_size=2048, hop_size=200, fft_size=4096)
     # Spectral Flux/Flatness, MFCCs, SDCs
     flux = spectral_flux(spectrogram)
     sflux = superflux(spectrogram)
     cflux = complex_flux(spectrogram)
-    mfcc = MFCC(spectrogram)
-    return np.vstack((flux, sflux, cflux, mfcc))
+    #mfcc = MFCC(spectrogram)
+    X = np.vstack((flux, sflux, cflux)) # mfcc
+    print("single audio shape", X.shape)
+    return X
 
 def get_dir_mir(audio_dir, num_samples = -1):
     '''
@@ -375,24 +378,20 @@ class MIRData():
         max_samples = -1
 
         # 24 bands for superflux https://madmom.readthedocs.io/en/latest/modules/features/onsets.html?highlight=spectral_flux#madmom.features.onsets.superflux
-        X, Y = get_dataset(music_dir, speech_dir, process_dir=get_dir_spectrograms,
-                           hpool=0, wpool=0, 
-                           num_samples=max_samples, shuffle=True, reload=False,
-                           window=np.hanning, fps=100, num_bands=24, fmin=30, fmax=17000,
-                           fft_sizes=[1024, 2048, 4096]
-                          )
-        X = [get_mir(spectro) for spectro in X]
+        X, Y = get_dataset(music_dir, speech_dir, process_dir=get_dir_mir, file_suffix="_mir")
 
         Y = (Y + 1) / 2 
         self.X, self.Y = X, Y
 
-        self.spectral_flux = X[0]
-        self.super_flux = X[1]
-        self.complex_flux = X[2]
-        self.mfcc = X[3]
-        #self.num_frequencies = X.shape[1]
-        #self.num_timesteps   = X.shape[2]
-        #self.num_channels    = X.shape[3]
+        #self.spectral_flux = X[0]
+        #self.super_flux = X[1]
+        #self.complex_flux = X[2]
+        #self.mfcc = X[3]
+        # Maxi: this selects the first sample as spectral flux, the second audio file as super flux, ...
+
+        self.num_frequencies = X.shape[1]
+        self.num_timesteps   = X.shape[2]
+        self.num_channels    = X.shape[3]
         self.input_shape = X[0].shape
 
 
