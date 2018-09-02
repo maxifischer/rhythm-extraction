@@ -14,10 +14,11 @@ from sklearn.metrics import log_loss
 from sklearn.svm import SVC
 
 class OLSPatchRegressor():
-    def __init__(self, patch_width=5):
+    def __init__(self, patch_width=5, k=0.001):
         self.w = None
         self.filter_shape = None
         self.patch_width=patch_width
+        self.k=k
         
     def fit(self, X, Y, **kwargs):
         patch_width=self.patch_width
@@ -26,8 +27,10 @@ class OLSPatchRegressor():
 
         self.filter_shape = X.shape[1:]
         X_flattened = X.reshape(X.shape[0],-1)
+
+        N = X_flattened.shape[1]
         
-        self.w = (np.linalg.solve(np.dot(X_flattened.T, X_flattened), np.dot(X_flattened.T, Y))).reshape(self.filter_shape)[na,:]
+        self.w = (np.linalg.solve(np.dot(X_flattened.T, X_flattened) + self.k * np.eye(N), np.dot(X_flattened.T, Y))).reshape(self.filter_shape)[na,:]
 
     def predict(self, X, patch_mode=False):
         
@@ -47,21 +50,33 @@ class OLSPatchRegressor():
             return y 
 
     def evaluate(self, X, y, **kwargs):
-        y_pred = np.sign(self.predict(X))
+        y_pred = (np.sign(self.predict(X)-.5)+ 1)/2
         return np.mean(y_pred == y)
 
 class PatchSVM():
-    def __init__(self, C=1., patch_width=5):
+    def __init__(self, C=1., patch_width=100, patch_stride=200, kernel='rbf'):
         self.C=C
-        self.svm=SVC()
+        self.svm=SVC(C=C, kernel=kernel, degree=1)
         self.patch_width=patch_width
+        self.patch_stride=patch_stride
 
     def fit(self, X, Y, **kwargs):
-        patch_width=self.patch_width
-        X_patched, Y_patched = patch_augment(X, Y, patch_width)
-        X_patched = X_patched.reshape(X_patched.shape[0], -1) 
 
+        #print('labels pre:')
+        #print(np.min(Y), np.max(Y))
+        ## convert labels to [-1, 1] range
+        Y = (Y - .5) * 2
+        print('labels post:')
+        print(np.min(Y), np.max(Y))
+
+        patch_width=self.patch_width
+        X_patched, Y_patched = patch_augment(X, Y, patch_width, patch_stride=self.patch_stride)
+        print('...finished patchaugment')
+        X_patched = X_patched.reshape(X_patched.shape[0], -1) 
+        print('x_patched shape is: {}'.format(X_patched.shape))
+        
         self.svm.fit(X_patched, Y_patched)
+        print('...finished fitting')
 
     def predict(self, X):
             N, H, W, D = X.shape
@@ -69,9 +84,13 @@ class PatchSVM():
             y = np.zeros(out_shape)
             
             for i in range(X.shape[1]):
-                y[:,i] = np.squeeze( self.svm.predict(X[:,:,i:i+w,:].reshape[N,-1]))
+                y[:,i] = self.svm.predict(X[:,:,i:i+self.patch_width,:].reshape(N,-1))
+            
+            print('prediction range: {}-{}'.format(np.min(y), np.max(y)))
+            mean_pred = np.mean(y, axis=1)
+            print('meaned prediction range: {}-{}'.format(np.min(mean_pred), np.max(mean_pred)))
 
-            return np.sign(np.mean(y, axis=1))
+            return (np.sign(mean_pred-.5)+1)/2# (np.sign(np.mean(y, axis=1)) + 1) / 2
 
     def evaluate(self, X, Y, **kwargs):
         y_pred = self.predict(X)

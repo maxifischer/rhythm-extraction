@@ -155,7 +155,7 @@ def spectro_mini_db_patches(music_dir, speech_dir, patch_width, hpool = 16, wpoo
         
     return patch_augment(X, Y, patch_width, shuffle, max_samples)
 
-def patch_augment(X, Y, patch_width, shuffle=True, max_samples = -1):
+def patch_augment(X, Y, patch_width, patch_stride = 1, shuffle=True, max_samples = -1):
         
     N, H, W, D = X.shape
     
@@ -163,8 +163,8 @@ def patch_augment(X, Y, patch_width, shuffle=True, max_samples = -1):
     neg_idxs = np.logical_not(pos_idxs)
     
     # crop patches from the images
-    X_patched_pos = crop_image_patches(X[pos_idxs], H, patch_width)
-    X_patched_neg = crop_image_patches(X[neg_idxs], H, patch_width)
+    X_patched_pos = crop_image_patches(X[pos_idxs], H, patch_width, wstride=patch_stride)
+    X_patched_neg = crop_image_patches(X[neg_idxs], H, patch_width, wstride=patch_stride)
     
     X_patched_pos = X_patched_pos.reshape(-1, *X_patched_pos.shape[2:])
     X_patched_neg = X_patched_neg.reshape(-1, *X_patched_neg.shape[2:])
