@@ -41,7 +41,7 @@ data_path = {
 
 na = np.newaxis
 
-model_names = ["linear-linvar", "linear", "simple_cnn"]
+model_names = ["patchsvm"] #  ["linear-linvar", "linear", "simple_cnn"]
 
 
 """
@@ -52,7 +52,7 @@ TODO:
 
 def cv_experiment(data, model_name, col_test_data):
    
-    epochs=5
+    epochs=20
     batch_size=8
 
     input_shape = data.X.shape[1:]

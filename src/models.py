@@ -54,9 +54,9 @@ class OLSPatchRegressor():
         return np.mean(y_pred == y)
 
 class PatchSVM():
-    def __init__(self, C=1., patch_width=100, patch_stride=200, kernel='rbf'):
+    def __init__(self, C=1., patch_width=100, patch_stride=100, kernel='rbf'):
         self.C=C
-        self.svm=SVC(C=C, kernel=kernel, degree=1)
+        self.svm=SVC(C=C, kernel=kernel, degree=1, gamma='auto')
         self.patch_width=patch_width
         self.patch_stride=patch_stride
 
@@ -78,17 +78,20 @@ class PatchSVM():
         self.svm.fit(X_patched, Y_patched)
         print('...finished fitting')
 
-    def predict(self, X):
+    def predict(self, X, prediction_stride=-1):
             N, H, W, D = X.shape
-            out_shape = (N,W-self.patch_width+1) 
+            if prediction_stride < 0:
+                prediction_stride = self.patch_width
+            out_shape = (N,(W-self.patch_width)//prediction_stride+1) 
             y = np.zeros(out_shape)
             
-            for i in range(X.shape[1]):
-                y[:,i] = self.svm.predict(X[:,:,i:i+self.patch_width,:].reshape(N,-1))
-            
-            print('prediction range: {}-{}'.format(np.min(y), np.max(y)))
+            for i in range(out_shape[1]):
+                strt = i * prediction_stride
+                y[:,i] = self.svm.predict(X[:,:,strt:strt+self.patch_width,:].reshape(N,-1))
+    
+            print('prediction range: [{},{}]'.format(np.min(y), np.max(y)))
             mean_pred = np.mean(y, axis=1)
-            print('meaned prediction range: {}-{}'.format(np.min(mean_pred), np.max(mean_pred)))
+            print('meaned prediction range: [{},{}]'.format(np.min(mean_pred), np.max(mean_pred)))
 
             return (np.sign(mean_pred-.5)+1)/2# (np.sign(np.mean(y, axis=1)) + 1) / 2
 
