@@ -339,11 +339,17 @@ class SpectroData():
 
 
 def get_mir(audio_path):
+
+    hop_length = 200
     # Spectral Flux/Flatness, MFCCs, SDCs
-    spectrogram = madmom.audio.spectrogram.Spectrogram(audio_path, frame_size=2048, hop_size=200, fft_size=4096)
+    spectrogram = madmom.audio.spectrogram.Spectrogram(audio_path, frame_size=2048, hop_size=hop_length, fft_size=4096)
     audio = madmom.audio.signal.Signal(audio_path, dtype=float)
    
     all_features = []
+
+    #print(spectrogram.shape)
+    #print(audio.shape)
+    #print('signal sampling rate: {}'.format(audio.sample_rate))
     
     # madmom features
     all_features.extend([spectral_flux(spectrogram), superflux(spectrogram), complex_flux(spectrogram)]) #, MFCC(spectrogram)])
@@ -351,13 +357,12 @@ def get_mir(audio_path):
     # mfcc still wrong shape as it is a 2 array
     
     # librosa features
-    libr_features = [spectral_centroid(audio), spectral_bandwidth(audio), spectral_flatness(audio), spectral_rolloff(audio), rmse(audio), zero_crossing_rate(audio)]#, mfcc(audio)])
+    libr_features = [spectral_centroid(audio, hop_length=hop_length), spectral_bandwidth(audio,hop_length=hop_length), spectral_flatness(audio,hop_length=hop_length), spectral_rolloff(audio,hop_length=hop_length), rmse(audio, hop_length=hop_length), zero_crossing_rate(audio, hop_length=hop_length)]#, mfcc(audio)])
     for libr in libr_features:
         all_features.append(np.squeeze(libr, axis=0))
-    for feature in all_features:
-        print(feature.shape)
-    X = np.vstack(all_features)
-    print("single audio shape", X.shape)
+    # for feature in all_features:
+    #     print(feature.shape)
+    X = np.stack(all_features, axis=1)[na,:,:]
     return X
 
 def get_dir_mir(audio_dir, num_samples = -1):
@@ -392,7 +397,7 @@ class MIRData():
 
         # 24 bands for superflux https://madmom.readthedocs.io/en/latest/modules/features/onsets.html?highlight=spectral_flux#madmom.features.onsets.superflux
 
-        X, Y = get_dataset(music_dir, speech_dir, process_dir=get_dir_mir, file_suffix="_mir")
+        X, Y = get_dataset(music_dir, speech_dir, process_dir=get_dir_mir, file_suffix="_mir", num_samples=max_samples, hpool=0, wpool=0)
 
         Y = (Y + 1) / 2 
         self.X, self.Y = X, Y
