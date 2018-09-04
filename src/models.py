@@ -54,9 +54,10 @@ class OLSPatchRegressor():
         return np.mean(y_pred == y)
 
 class PatchSVM():
-    def __init__(self, C=1., patch_width=100, patch_stride=100, kernel='rbf'):
+    def __init__(self, C=10, patch_width=100, patch_stride=100, kernel='rbf'):
+        self._kwargs = {'C':C, 'patch_width':patch_width, 'patch_stride':patch_stride, 'kernel':kernel}
         self.C=C
-        self.svm=SVC(C=C, kernel=kernel, degree=1, gamma='auto')
+        self.svm=SVC(C=C, kernel=kernel, degree=1, gamma=1e-3)
         self.patch_width=patch_width
         self.patch_stride=patch_stride
 
@@ -77,6 +78,7 @@ class PatchSVM():
         
         self.svm.fit(X_patched, Y_patched)
         print('...finished fitting')
+        print('train accuracy: {}'.format(self.svm.score(X_patched, Y_patched)))
 
     def predict(self, X, prediction_stride=-1):
             N, H, W, D = X.shape
@@ -99,12 +101,40 @@ class PatchSVM():
         y_pred = self.predict(X)
         return np.mean(y_pred == Y)
 
+class MeanSVM():
+    def __init__(self, C=10, kernel='rbf'):
+        self._kwargs = {'C':C, 'kernel':kernel}
+        self.C=C
+        self.svm=SVC(C=C, kernel=kernel, degree=1, gamma=1e-3)
+
+    def mean_time_axis(self, X):
+        N,H,W,D = X.shape
+        # mean input data over the time axis (W)
+        X_meaned = np.mean(X, axis=2).reshape(N, -1) 
+        return X_meaned
+
+    def fit(self, X, Y, **kwargs):
+        X_meaned = self.mean_time_axis(X) 
+        self.svm.fit(X_meaned, Y)
+        # print train error
+        print(self.svm.score(X_meaned, Y))
+
+    def predict(self, X, **kwargs):
+        X_meaned = self.mean_time_axis(X)
+        return self.svm.predict(X_meaned)
+    def evaluate(self, X, Y, **kwargs):
+        y_pred = self.predict(X)
+        return np.mean(y_pred == Y)
+
 def get_model(modelname, input_shape):
 
     num_frequencies = input_shape[0]
 
     if modelname == 'patchsvm':
         return PatchSVM()
+
+    elif modelname == 'meansvm':
+        return MeanSVM()
 
     elif modelname == 'patchregressor':
         return OLSPatchRegressor()
@@ -156,7 +186,9 @@ def get_model(modelname, input_shape):
 def reset_weights(model):
 
     if isinstance(model, PatchSVM):
-        return PatchSVM(C=model.C, patch_width=model.patch_width)
+        return PatchSVM(**model._kwargs)
+    elif isinstance(model, MeanSVM):
+        return MeanSVM(**model._kwargs)
 
     elif isinstance(model, OLSPatchRegressor):
         return OLSPatchRegressor(patch_width=model.patch_width)
@@ -205,3 +237,4 @@ class TimestampAggregator():
     def evaluate(self, X, Y, *args, **kwargs):
         Y_ = self.predict(X)
         return log_loss(Y, Y_), np.mean((Y_>0.5)==(Y>0.5))
+
