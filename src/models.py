@@ -102,10 +102,10 @@ class PatchSVM():
         return np.mean(y_pred == Y)
 
 class MeanSVM():
-    def __init__(self, C=10, kernel='rbf'):
+    def __init__(self, C=10, kernel='rbf', gamma=0.000001):
         self._kwargs = {'C':C, 'kernel':kernel}
         self.C=C
-        self.svm=SVC(C=C, kernel=kernel, degree=1, gamma=1e-3)
+        self.svm=SVC(C=C, kernel=kernel, degree=1, gamma=gamma)
 
     def mean_time_axis(self, X):
         N,H,W,D = X.shape
@@ -114,10 +114,14 @@ class MeanSVM():
         return X_meaned
 
     def fit(self, X, Y, **kwargs):
+        print('input shape: {}'.format(X.shape))
+
         X_meaned = self.mean_time_axis(X) 
+        print('meaned shape: {}'.format(X_meaned.shape))
         self.svm.fit(X_meaned, Y)
         # print train error
-        print(self.svm.score(X_meaned, Y))
+        print('...finished fitting')
+        print('...training acc: {}'.format(self.svm.score(X_meaned, Y)))
 
     def predict(self, X, **kwargs):
         X_meaned = self.mean_time_axis(X)
