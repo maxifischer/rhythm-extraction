@@ -41,7 +41,7 @@ data_path = {
 
 na = np.newaxis
 
-model_names = ["patchsvm"] #  ["linear-linvar", "linear", "simple_cnn"]
+model_names = ["meansvm-4.-0.001", "meansvm-10.-0.001", "meansvm"] #  ["linear-linvar", "linear", "simple_cnn"]
 
 
 """
@@ -103,7 +103,7 @@ def run_on_all(experiment):
 
         if data_name == "columbia-test": continue
         if data_name == "columbia-train": continue
-        for Preprocessor in [RhythmData, SpectroData , MIRData]:
+        for Preprocessor in[MIRData]: #  [RhythmData, SpectroData , MIRData]:
             data = Preprocessor(**kwargs)
 
             col_test_data = Preprocessor(**data_path["columbia-test"])

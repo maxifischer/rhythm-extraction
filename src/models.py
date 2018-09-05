@@ -54,10 +54,10 @@ class OLSPatchRegressor():
         return np.mean(y_pred == y)
 
 class PatchSVM():
-    def __init__(self, C=10, patch_width=100, patch_stride=100, kernel='rbf'):
-        self._kwargs = {'C':C, 'patch_width':patch_width, 'patch_stride':patch_stride, 'kernel':kernel}
+    def __init__(self, C=10, patch_width=100, patch_stride=100, kernel='rbf', gamma=1e-5):
+        self._kwargs = {'C':C, 'patch_width':patch_width, 'patch_stride':patch_stride, 'kernel':kernel, 'gamma':gamma}
         self.C=C
-        self.svm=SVC(C=C, kernel=kernel, degree=1, gamma=1e-3)
+        self.svm=SVC(C=C, kernel=kernel, degree=1, gamma=gamma)
         self.patch_width=patch_width
         self.patch_stride=patch_stride
 
@@ -103,7 +103,10 @@ class PatchSVM():
 
 class MeanSVM():
     def __init__(self, C=10, kernel='rbf', gamma=0.000001):
-        self._kwargs = {'C':C, 'kernel':kernel}
+
+        print('initialize meansvm with C={}, kernel={}, gamma={}'.format(C, kernel, gamma))
+
+        self._kwargs = {'C':C, 'kernel':kernel, 'gamma':gamma}
         self.C=C
         self.svm=SVC(C=C, kernel=kernel, degree=1, gamma=gamma)
 
@@ -134,11 +137,26 @@ def get_model(modelname, input_shape):
 
     num_frequencies = input_shape[0]
 
-    if modelname == 'patchsvm':
-        return PatchSVM()
 
-    elif modelname == 'meansvm':
-        return MeanSVM()
+    if modelname.startswith('meansvm') or modelname.startswith('patchsvm'):
+        
+        if modelname == 'patchsvm':
+            return PatchSVM()
+        elif  modelname == 'meansvm':
+            return MeanSVM()
+        else:
+            mdl_cnfg = modelname.split('-')
+            mdlnme = mdl_cnfg[0]
+            c     = float(mdl_cnfg[1])
+            gamma = float(mdl_cnfg[2])
+
+            if mdlnme == 'meansvm':
+                return MeanSVM(C=c, kernel='rbf', gamma=gamma)
+            elif mdlnme == 'patchsvm':
+                return PatchSVM(C=c, kernel='rbf', gamma=gamma)
+            else:
+                print('Modelname unknown: stick to format model-C_VALUE-GAMMA_VALUE ')
+                return None
 
     elif modelname == 'patchregressor':
         return OLSPatchRegressor()
