@@ -145,7 +145,7 @@ def get_model(modelname, input_shape):
         elif  modelname == 'meansvm':
             return MeanSVM()
         else:
-            mdl_cnfg = modelname.split('-')
+            mdl_cnfg = modelname.split('_')
             mdlnme = mdl_cnfg[0]
             c     = float(mdl_cnfg[1])
             gamma = float(mdl_cnfg[2])

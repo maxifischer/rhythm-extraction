@@ -41,10 +41,18 @@ data_path = {
 
 na = np.newaxis
 
-model_names = ["meansvm-4.-0.001", "meansvm-10.-0.001", "meansvm"] #  ["linear-linvar", "linear", "simple_cnn"]
 
+model_names =[]#  ["meansvm-4.-0.001", "meansvm-10.-0.001", "meansvm"] #  ["linear-linvar", "linear", "simple_cnn"]
 
+# SVM gridsearch values
+svm_models = ['meansvm']
+C_values = np.linspace(1., 100, 10)
+gamma_values = np.logspace(-10, 0, 10)
 
+for svm_model in svm_models:
+    for c in C_values:
+        for gamma in gamma_values:
+            model_names.append('{}_{}_{}'.format(svm_model, c, gamma))
 
 """
 TODO:
