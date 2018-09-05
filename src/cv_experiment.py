@@ -44,6 +44,8 @@ na = np.newaxis
 model_names = ["meansvm-4.-0.001", "meansvm-10.-0.001", "meansvm"] #  ["linear-linvar", "linear", "simple_cnn"]
 
 
+
+
 """
 TODO:
 - a way to save results, maybe in pandas
@@ -101,6 +103,8 @@ def run_on_all(experiment):
     results = {}
     for data_name, kwargs in data_path.items():
 
+        results[data_name]={}
+
         if data_name == "columbia-test": continue
         if data_name == "columbia-train": continue
         for Preprocessor in[MIRData]: #  [RhythmData, SpectroData , MIRData]:
@@ -112,11 +116,20 @@ def run_on_all(experiment):
                 print("---------------- Experiment for {} on {}({})".format(
                     model_name, Preprocessor.__name__, data_name))
                 result = experiment(data, model_name, col_test_data)
-                results['data_name']['model_name'] = result
+                results[data_name][model_name] = result
                 print(result)
 
     return results
 
 
 if __name__ == "__main__":
-    run_on_all(cv_experiment)
+    results = run_on_all(cv_experiment)
+  
+    print('RESULTS:')
+    for data_name, data_results in results.items():
+        print('-----')
+        print(data_name)
+        print('-----')
+
+        for model_name, res in data_results.items():
+            print('{}: {}'.format(model_name, res))
