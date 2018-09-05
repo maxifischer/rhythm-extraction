@@ -54,6 +54,8 @@ for svm_model in svm_models:
         for gamma in gamma_values:
             model_names.append('{}_{}_{}'.format(svm_model, c, gamma))
 
+model_names = ["linear-linvar", "simple_cnn"]
+
 """
 TODO:
 - a way to save results, maybe in pandas
@@ -74,8 +76,7 @@ def cv_experiment(data, model_name, col_test_data):
 
     train_model = lambda model, X, Y: model.fit(X, Y,
                                         batch_size=batch_size,
-                                        epochs=epochs,
-                                        verbose=0)
+                                        epochs=epochs, verbose=0)
 
     cvacc = cv(data.X, data.Y, get_fresh_model, train_model, nfolds=5, nrepetitions=1)
 
@@ -132,12 +133,29 @@ def run_on_all(experiment):
 
 if __name__ == "__main__":
     results = run_on_all(cv_experiment)
-  
+ 
     print('RESULTS:')
     for data_name, data_results in results.items():
         print('-----')
         print(data_name)
         print('-----')
 
+        topacc=0.
+        topmod=None
         for model_name, res in data_results.items():
             print('{}: {}'.format(model_name, res))
+
+            if isinstance(res, list) or isinstance(res, np.ndarray):
+                acc = res[1]
+            else:
+                acc = res
+
+            if acc > topacc:
+                topacc=acc
+                topmod=model_name
+
+        print('-----------------------')
+        print('-----------------------')
+        print('Finished {}'.format(data_name))
+        print('Best model: {}'.format(topmod))
+        print('CVAccuracy: {}'.format(topacc))
