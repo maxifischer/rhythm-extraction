@@ -54,7 +54,7 @@ for svm_model in svm_models:
         for gamma in gamma_values:
             model_names.append('{}_{}_{}'.format(svm_model, c, gamma))
 
-model_names = ["linear-linvar", "simple_cnn"]
+# model_names = ["simple_cnn"]
 
 """
 TODO:
@@ -80,10 +80,17 @@ def cv_experiment(data, model_name, col_test_data):
 
     cvacc = cv(data.X, data.Y, get_fresh_model, train_model, nfolds=5, nrepetitions=1)
 
-    return cvacc
+    test_acc = None
+    if col_test_data is not None: 
+        train_model(model, data.X, data.Y)
+        test_acc = model.evaluate(col_test_data.X, col_test_data.Y)
 
-    # do cv on the model
-    # do cv on TimestepAggregator model
+    if test_acc is None:
+        return test_acc
+    else:
+        return test_acc, cvacc
+
+def train_test_experiment(data, model_name, col_test_data):
     pass
 
 
@@ -114,9 +121,8 @@ def run_on_all(experiment):
 
         results[data_name]={}
 
-        if data_name == "columbia-test": continue
-        if data_name == "columbia-train": continue
-        for Preprocessor in[MIRData]: #  [RhythmData, SpectroData , MIRData]:
+        if data_name == "columbia-test": continue # don't use the test set for training
+        for Preprocessor in [MIRData]:# [RhythmData, SpectroData , MIRData]:
             data = Preprocessor(**kwargs)
 
             col_test_data = Preprocessor(**data_path["columbia-test"])
@@ -145,13 +151,16 @@ if __name__ == "__main__":
         for model_name, res in data_results.items():
             print('{}: {}'.format(model_name, res))
 
-            if isinstance(res, list) or isinstance(res, np.ndarray):
+            tuple_res = False
+            if isinstance(res, list) or isinstance(res, np.ndarray) or isinstance(res, tuple):
                 acc = res[1]
+                tuple_res = True
             else:
                 acc = res
 
             if acc > topacc:
                 topacc=acc
+                topres=res
                 topmod=model_name
 
         print('-----------------------')
@@ -159,3 +168,5 @@ if __name__ == "__main__":
         print('Finished {}'.format(data_name))
         print('Best model: {}'.format(topmod))
         print('CVAccuracy: {}'.format(topacc))
+        if tuple_res:
+            print('Out of sample acc on Columbia-Test: {}'.format(topres[0]))
