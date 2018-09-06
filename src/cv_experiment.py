@@ -46,8 +46,8 @@ model_names =[]#  ["meansvm-4.-0.001", "meansvm-10.-0.001", "meansvm"] #  ["line
 
 # SVM gridsearch values
 svm_models = ['meansvm']
-C_values = np.linspace(1., 100, 10)
-gamma_values = np.logspace(-10, 0, 10)
+C_values = np.linspace(1., 100, 2)
+gamma_values = np.logspace(-10, 0,2)
 
 for svm_model in svm_models:
     for c in C_values:
@@ -62,10 +62,7 @@ TODO:
 - a way to get load or (train and save) a model for the evaluation stuff
 """
 
-def cv_experiment(data, model_name, col_test_data):
-   
-    epochs=20
-    batch_size=8
+def cv_experiment(data, model_name, col_test_data, epochs=20, batch_size=8):
 
     input_shape = data.X.shape[1:]
     model = get_model(model_name, input_shape)
@@ -90,8 +87,29 @@ def cv_experiment(data, model_name, col_test_data):
     else:
         return test_acc, cvacc
 
-def train_test_experiment(data, model_name, col_test_data):
-    pass
+def train_test_experiment(data, model_name, col_test_data, epochs=20, batch_size=8):
+
+    input_shape = data.X.shape[1:]
+    model = get_model(model_name, input_shape)
+
+    def get_fresh_model(model=model):
+        reset_weights(model)
+        return model
+
+    train_model = lambda model, X, Y: model.fit(X, Y,
+                                        batch_size=batch_size,
+                                        epochs=epochs, verbose=0)
+
+    train_model(model, data.X, data.Y)
+    train_acc = model.evaluate(data.X, data.Y)
+    test_acc  = model.evaluate(col_test_data.X, col_test_data.Y)
+
+    if isinstance(train_acc, np.ndarray):
+        result = (train_acc[1], test_acc[1])
+    else:
+        result = test_acc, train_acc
+
+    return result
 
 
 """
@@ -119,54 +137,56 @@ def run_on_all(experiment):
     results = {}
     for data_name, kwargs in data_path.items():
 
-        results[data_name]={}
-
         if data_name == "columbia-test": continue # don't use the test set for training
+        results[data_name]={}
         for Preprocessor in [MIRData]:# [RhythmData, SpectroData , MIRData]:
+            prepr_name = Preprocessor.__name__
             data = Preprocessor(**kwargs)
+            
+            results[data_name][prepr_name]={}
 
             col_test_data = Preprocessor(**data_path["columbia-test"])
             for model_name in model_names:
-                results['data_name'] = {}
                 print("---------------- Experiment for {} on {}({})".format(
                     model_name, Preprocessor.__name__, data_name))
                 result = experiment(data, model_name, col_test_data)
-                results[data_name][model_name] = result
+                results[data_name][prepr_name][model_name] = result
                 print(result)
 
     return results
 
 
 if __name__ == "__main__":
-    results = run_on_all(cv_experiment)
- 
-    print('RESULTS:')
+    results = run_on_all(train_test_experiment)
+    print('\n -------- ') 
+    print('|RESULTS:|')
+    print(' -------- ') 
     for data_name, data_results in results.items():
-        print('-----')
-        print(data_name)
-        print('-----')
+        print('\n---> {} <---'.format(data_name))
 
         topacc=0.
         topmod=None
-        for model_name, res in data_results.items():
-            print('{}: {}'.format(model_name, res))
+        tuple_res=False
 
-            tuple_res = False
-            if isinstance(res, list) or isinstance(res, np.ndarray) or isinstance(res, tuple):
-                acc = res[1]
-                tuple_res = True
-            else:
-                acc = res
+        for prepr_name, prepr_res in data_results.items():
 
-            if acc > topacc:
-                topacc=acc
-                topres=res
-                topmod=model_name
+            for model_name, res in prepr_res.items():
 
-        print('-----------------------')
-        print('-----------------------')
-        print('Finished {}'.format(data_name))
+                tuple_res = False
+                if isinstance(res, list) or isinstance(res, np.ndarray) or isinstance(res, tuple):
+                    acc = res[1]
+                    tuple_res = True
+                else:
+                    acc = res
+
+                if acc > topacc:
+                    topacc=acc
+                    topres=res
+                    topmod=model_name
+                    topprepr=prepr_name
+
         print('Best model: {}'.format(topmod))
-        print('CVAccuracy: {}'.format(topacc))
+        print('(On {})'.format(topprepr))
+        print('Model Selection Accuracy: {}'.format(topacc))
         if tuple_res:
             print('Out of sample acc on Columbia-Test: {}'.format(topres[0]))
