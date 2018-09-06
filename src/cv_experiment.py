@@ -46,8 +46,8 @@ model_names =[]#  ["meansvm-4.-0.001", "meansvm-10.-0.001", "meansvm"] #  ["line
 
 # SVM gridsearch values
 svm_models = ['meansvm']
-C_values = np.linspace(1., 100, 2)
-gamma_values = np.logspace(-10, 0,2)
+C_values     = np.linspace(1., 100, 20)
+gamma_values = np.logspace(-10, 0,20)
 
 for svm_model in svm_models:
     for c in C_values:
@@ -157,7 +157,7 @@ def run_on_all(experiment):
 
 
 if __name__ == "__main__":
-    results = run_on_all(train_test_experiment)
+    results = run_on_all(cv_experiment)
     print('\n -------- ') 
     print('|RESULTS:|')
     print(' -------- ') 
