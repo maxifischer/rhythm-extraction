@@ -163,7 +163,7 @@ def get_model(modelname, input_shape):
 
     elif modelname == 'simple_cnn':
 
-        time_filter_size=3
+        time_filter_size=10
 
         # simple cnn with very narrow filters in the time axis
         model = Sequential()
@@ -179,6 +179,7 @@ def get_model(modelname, input_shape):
                       metrics=['accuracy'])
         
         return model
+
 
     elif modelname == 'linear':
         # linear model
@@ -204,6 +205,11 @@ def get_model(modelname, input_shape):
     else:
         print('modelname unknown')
         return None
+
+def reshape_keras_conv_input(modelname, input_shape, weights):
+    new_model = get_model(modelname, input_shape)
+    new_model.set_weights(weights)
+    return new_model
 
 def reset_weights(model):
 

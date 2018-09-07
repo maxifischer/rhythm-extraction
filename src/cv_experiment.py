@@ -9,7 +9,7 @@ import madmom
 import sys
 sys.path.append('../src')
 from preprocessing import RhythmData, SpectroData, MIRData
-from models import OLSPatchRegressor, get_model, reset_weights
+from models import OLSPatchRegressor, get_model, reset_weights, reshape_keras_conv_input
 from utils import cv
 import visualize
 
@@ -54,7 +54,7 @@ for svm_model in svm_models:
         for gamma in gamma_values:
             model_names.append('{}_{}_{}'.format(svm_model, c, gamma))
 
-# model_names = ["simple_cnn"]
+model_names = ["simple_cnn"]
 
 """
 TODO:
@@ -80,14 +80,19 @@ def cv_experiment(data, model_name, col_test_data, epochs=20, batch_size=8):
     test_acc = None
     if col_test_data is not None: 
         train_model(model, data.X, data.Y)
-        test_acc = model.evaluate(col_test_data.X, col_test_data.Y)
+        test_acc = evaluate_on_test_set(model, model_name, col_test_data)
 
-    if test_acc is None:
-        return test_acc
+    K.clear_session()
+    if isinstance(cvacc, np.ndarray)or isinstance(cvacc, list):
+        result = (test_acc[1], cvacc[1])
     else:
-        return test_acc, cvacc
+        result = test_acc, cvacc
+    if test_acc is None:
+        return result[1]
+    else:
+        return result
 
-def train_test_experiment(data, model_name, col_test_data, epochs=20, batch_size=8):
+def train_test_experiment(data, model_name, col_test_data, epochs=100, batch_size=8):
 
     input_shape = data.X.shape[1:]
     model = get_model(model_name, input_shape)
@@ -102,15 +107,30 @@ def train_test_experiment(data, model_name, col_test_data, epochs=20, batch_size
 
     train_model(model, data.X, data.Y)
     train_acc = model.evaluate(data.X, data.Y)
-    test_acc  = model.evaluate(col_test_data.X, col_test_data.Y)
-
-    if isinstance(train_acc, np.ndarray):
-        result = (train_acc[1], test_acc[1])
+    
+    test_acc = evaluate_on_test_set(model, model_name, col_test_data)
+        
+    if isinstance(train_acc, np.ndarray)or isinstance(train_acc, list):
+        result = (test_acc[1],train_acc[1])
     else:
         result = test_acc, train_acc
 
+    K.clear_session()
+
     return result
 
+def evaluate_on_test_set(model, model_name, col_test_data):
+    
+    try:
+        test_acc  = model.evaluate(col_test_data.X, col_test_data.Y)
+    except ValueError:
+        # if the test set has a different time length then the train set, try to reshape the model and test then
+        test_input_shape = col_test_data.X.shape[1:]
+        model_weights = model.get_weights()
+        reshaped_model = reshape_keras_conv_input(model_name, test_input_shape, model_weights)
+        test_acc  = reshaped_model.evaluate(col_test_data.X, col_test_data.Y)
+
+    return test_acc
 
 """
 The following stuff happens for trained models
@@ -157,7 +177,7 @@ def run_on_all(experiment):
 
 
 if __name__ == "__main__":
-    results = run_on_all(cv_experiment)
+    results = run_on_all(train_test_experiment)
     print('\n -------- ') 
     print('|RESULTS:|')
     print(' -------- ') 
