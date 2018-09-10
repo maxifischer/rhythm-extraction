@@ -54,7 +54,7 @@ for svm_model in svm_models:
         for gamma in gamma_values:
             model_names.append('{}_{}_{}'.format(svm_model, c, gamma))
 
-model_names = ["simple_cnn"]
+model_names = ["simple_cnn", "simple_cnn-linvar"]
 
 """
 TODO:
@@ -62,7 +62,7 @@ TODO:
 - a way to get load or (train and save) a model for the evaluation stuff
 """
 
-def cv_experiment(data, model_name, col_test_data, epochs=20, batch_size=8):
+def cv_experiment(data, model_name, col_test_data, epochs=100, batch_size=8):
 
     input_shape = data.X.shape[1:]
     model = get_model(model_name, input_shape)
@@ -87,6 +87,7 @@ def cv_experiment(data, model_name, col_test_data, epochs=20, batch_size=8):
         result = (test_acc[1], cvacc[1])
     else:
         result = test_acc, cvacc
+
     if test_acc is None:
         return result[1]
     else:
@@ -159,7 +160,7 @@ def run_on_all(experiment):
 
         if data_name == "columbia-test": continue # don't use the test set for training
         results[data_name]={}
-        for Preprocessor in [MIRData]:# [RhythmData, SpectroData , MIRData]:
+        for Preprocessor in [RhythmData, SpectroData , MIRData]:
             prepr_name = Preprocessor.__name__
             data = Preprocessor(**kwargs)
             
@@ -177,7 +178,7 @@ def run_on_all(experiment):
 
 
 if __name__ == "__main__":
-    results = run_on_all(train_test_experiment)
+    results = run_on_all(cv_experiment)
     print('\n -------- ') 
     print('|RESULTS:|')
     print(' -------- ') 
