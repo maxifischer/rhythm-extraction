@@ -254,6 +254,14 @@ class TimestampAggregator():
         self.avg_mean_neg = np.mean(mean[Y<=0])
         self.avg_var_pos = np.mean(var[Y>0])
         self.avg_var_neg = np.mean(var[Y<=0])
+
+    def get_weights(self):
+        return self.model.get_weights(), self.time_model.get_weights(), self.w
+
+    def set_weights(self, weights):
+        self.model.set_weights(weights[0])
+        self.time_model.set_weights(weights[1])
+        self.w = weights[2]
         
     def predict(self, X):
         p = self.time_model.predict(X)[:,0,:,0] # (samples, timestamps)
