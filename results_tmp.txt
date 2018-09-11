@@ -1,0 +1,63 @@
+first results:
+------------------
+the left value is the test accuracy on the columbia-test set, the right value the cvaccuracy (5-fold cv) on the respective training set.
+
+We can see:
+    - best model (by cvacc):
+        x GTZAN:                simple_cnn on spectro (0.95323076248168948)
+        x columbia-train:       simple_cnn-linvar on spectro(1.0) # (TODO: too good, check again)
+        (baseline is: svm with MIRpreprocessing: ~89% # ( TODO: check again)
+        (# TODO: add test acc and mybe F1 score (if time))
+
+we also want to compare:
+    - performance of different preprocessings for simple models (linear)
+    - performance for different preprocessings (more complex models)
+
+----------------------------------------------------------------------------------------------------------------
+
+---------------- Experiment for linear on RhythmData(GTZAN)
+(0.80000000000000004, 0.69353845119476321)
+---------------- Experiment for linear-linvar on RhythmData(GTZAN)
+(0.92500000000000004, 0.85938461538461541)
+---------------- Experiment for linear on MIRData(GTZAN)
+(0.80000000000000004, 0.53046153783798222)
+---------------- Experiment for linear-linvar on MIRData(GTZAN)
+(0.47499999999999998, 0.63138461538461532)
+---------------- Experiment for linear on RhythmData(columbia-train)
+(0.94999999999999996, 0.72499999999999998)
+---------------- Experiment for linear-linvar on RhythmData(columbia-train)
+(0.94999999999999996, 0.84166666666666679)
+---------------- Experiment for linear on MIRData(columbia-train)
+(0.5, 0.50833334326744084)
+---------------- Experiment for linear-linvar on MIRData(columbia-train)
+(0.5, 0.60833333333333317)
+
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+---------------- Experiment for simple_cnn on SpectroData(columbia-train)
+(0.94999999999999996, 0.98333333730697636)
+---------------- Experiment for simple_cnn-linvar on SpectroData(columbia-train)
+(0.94999999999999996, 0.99166666666666681)
+---------------- Experiment for simple_cnn on SpectroData(GTZAN)
+(0.94999999999999996, 0.95323076248168948)
+---------------- Experiment for simple_cnn-linvar on SpectroData(GTZAN)
+(0.90000000000000002, 0.93753846153846143)
+---------------- Experiment for simple_cnn-linvar on SpectroData(columbia-train)
+(0.97499999999999998, 1.0)
+---------------- Experiment for simple_cnn on RhythmData(columbia-train)
+(0.94999999999999996, 0.94999999999999996)
+---------------- Experiment for simple_cnn-linvar on RhythmData(columbia-train)
+(0.97499999999999998, 0.95833333333333326)
+---------------- Experiment for simple_cnn on MIRData(columbia-train)
+(0.90000000000000002, 0.85833334326744082)
+---------------- Experiment for simple_cnn-linvar on MIRData(columbia-train)
+(0.94999999999999996, 0.97499999999999998)
+---------------- Experiment for simple_cnn on RhythmData(GTZAN)
+(0.97499999999999998, 0.90615384578704838)
+---------------- Experiment for simple_cnn-linvar on RhythmData(GTZAN)
+(0.97499999999999998, 0.93076923076923068)
+---------------- Experiment for simple_cnn on MIRData(GTZAN)
+(0.94999999999999996, 0.67969231009483333)
+---------------- Experiment for simple_cnn-linvar on MIRData(GTZAN)
+(0.94999999999999996, 0.94492307692307698)
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
