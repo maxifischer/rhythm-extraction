@@ -21,8 +21,12 @@ from keras import backend as K
 from keras.models import Model
 from sklearn.metrics import log_loss
 
+import pickle
+
 MUSIC = 1
 SPEECH = 0
+
+RUN_NAME='test'
 
 data_path = {
                 "GTZAN": {
@@ -45,16 +49,16 @@ na = np.newaxis
 model_names =[]#  ["meansvm-4.-0.001", "meansvm-10.-0.001", "meansvm"] #  ["linear-linvar", "linear", "simple_cnn"]
 
 # SVM gridsearch values
-svm_models = ['meansvm']
-C_values     = np.linspace(1., 100, 20)
-gamma_values = np.logspace(-10, 0,20)
+svm_models = ['meansvm']# 'patchsvm']
+C_values     = np.linspace(1., 100, 2)
+gamma_values = np.logspace(-10, 0,2)
 
 for svm_model in svm_models:
     for c in C_values:
         for gamma in gamma_values:
             model_names.append('{}_{}_{}'.format(svm_model, c, gamma))
 
-model_names = ["simple_cnn", "simple_cnn-linvar"]
+# model_names = ["linear", "linear-linvar", "simple_cnn", "simple_cnn-linvar"]
 
 """
 TODO:
@@ -160,7 +164,7 @@ def run_on_all(experiment):
 
         if data_name == "columbia-test": continue # don't use the test set for training
         results[data_name]={}
-        for Preprocessor in [RhythmData, SpectroData , MIRData]:
+        for Preprocessor in [RhythmData, MIRData]:
             prepr_name = Preprocessor.__name__
             data = Preprocessor(**kwargs)
             
@@ -178,7 +182,29 @@ def run_on_all(experiment):
 
 
 if __name__ == "__main__":
-    results = run_on_all(cv_experiment)
+
+    if not os.path.exists('results'):
+        os.mkdir('results')
+    save_file_name = 'results/{}_results.pickle'.format(RUN_NAME)
+   
+
+    if not os.path.exists(save_file_name):
+        print('no save file found... calc it')
+        results = run_on_all(cv_experiment)
+        with open(save_file_name, 'wb') as handle:
+                pickle.dump(results, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        print('...saved results')
+    else:
+        with open(save_file_name, 'rb') as handle:
+                results = pickle.load(handle)
+        print('...loaded results from file')
+
+    if not os.path.exists(save_file_name):
+        results = run_on_all(cv_experiment)
+        np.savez(save_file_name, results)
+    else:
+        results=np.load(save_file_name)
+
     print('\n -------- ') 
     print('|RESULTS:|')
     print(' -------- ') 
