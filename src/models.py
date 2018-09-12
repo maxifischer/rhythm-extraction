@@ -10,7 +10,7 @@ from keras.layers import Conv2D, MaxPooling2D
 from keras import backend as K
 from keras.models import Model
 
-from sklearn.metrics import log_loss
+from sklearn.metrics import log_loss, f1_score
 from sklearn.svm import SVC
 
 class OLSPatchRegressor():
@@ -51,7 +51,7 @@ class OLSPatchRegressor():
 
     def evaluate(self, X, y, **kwargs):
         y_pred = (np.sign(self.predict(X)-.5)+ 1)/2
-        return np.mean(y_pred == y)
+        return np.mean(y_pred == y), f1_score(y, y_pred)
 
 class PatchSVM():
     def __init__(self, C=10, patch_width=100, patch_stride=100, kernel='rbf', gamma=1e-5):
@@ -99,7 +99,7 @@ class PatchSVM():
 
     def evaluate(self, X, Y, **kwargs):
         y_pred = self.predict(X)
-        return np.mean(y_pred == Y)
+        return np.mean(y_pred == Y), f1_score(y, y_pred)
 
 class MeanSVM():
     def __init__(self, C=10, kernel='rbf', gamma=0.000001):
@@ -131,7 +131,7 @@ class MeanSVM():
         return self.svm.predict(X_meaned)
     def evaluate(self, X, Y, **kwargs):
         y_pred = self.predict(X)
-        return np.mean(y_pred == Y)
+        return np.mean(y_pred == Y), f1_score(Y, y_pred)
 
 def get_model(modelname, input_shape):
 
@@ -272,5 +272,5 @@ class TimestampAggregator():
     
     def evaluate(self, X, Y, *args, **kwargs):
         Y_ = self.predict(X)
-        return log_loss(Y, Y_), np.mean((Y_>0.5)==(Y>0.5))
+        return log_loss(Y, Y_), np.mean((Y_>0.5)==(Y>0.5)), f1_score(Y, Y_)
 
