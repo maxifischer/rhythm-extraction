@@ -145,7 +145,7 @@ def get_model(modelname, input_shape):
         elif  modelname == 'meansvm':
             return MeanSVM()
         else:
-            mdl_cnfg = modelname.split('_')
+            mdl_cnfg = modelname.split('--')
             mdlnme = mdl_cnfg[0]
             c     = float(mdl_cnfg[1])
             gamma = float(mdl_cnfg[2])
@@ -155,7 +155,7 @@ def get_model(modelname, input_shape):
             elif mdlnme == 'patchsvm':
                 return PatchSVM(C=c, kernel='rbf', gamma=gamma)
             else:
-                print('Modelname unknown: stick to format model-C_VALUE-GAMMA_VALUE ')
+                print('Modelname unknown: stick to format model--C_VALUE--GAMMA_VALUE ')
                 return None
 
     elif modelname == 'patchregressor':
@@ -199,8 +199,8 @@ def get_model(modelname, input_shape):
         
         return model
 
-    elif modelname.endswith('-linvar'):
-        return TimestampAggregator(lambda: get_model(modelname.split('-linvar')[0], input_shape))
+    elif modelname.endswith('--linvar'):
+        return TimestampAggregator(lambda: get_model(modelname.split('--linvar')[0], input_shape))
     
     else:
         print('modelname unknown')
