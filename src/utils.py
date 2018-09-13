@@ -48,4 +48,4 @@ def cv(X, y, method, train_fun, nfolds=10, nrepetitions=5, shuffle=True):
                         print('(score was {})'.format(evaluation))
 
 
-        return np.mean(evals, axis=0) #, np.mean(evals_reinit, axis=0)
+        return [sum(y) / len(y) for y in zip(*evals)] #, np.mean(evals_reinit, axis=0)

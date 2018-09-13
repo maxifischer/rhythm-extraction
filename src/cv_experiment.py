@@ -22,6 +22,8 @@ from keras.models import Model
 from sklearn.metrics import log_loss
 
 import pickle
+import pandas as pd
+pd.set_option('display.max_columns', 15)
 
 MUSIC = 1
 SPEECH = 0
@@ -46,19 +48,19 @@ data_path = {
 na = np.newaxis
 
 
-model_names =[]#  ["meansvm-4.-0.001", "meansvm-10.-0.001", "meansvm"] #  ["linear-linvar", "linear", "simple_cnn"]
+model_names = []#["meansvm--4.--0.001", "meansvm--10.--0.001", "meansvm", "linear--linvar", "linear", "simple_cnn", "simple_cnn--linvar"]
 
 # SVM gridsearch values
 svm_models = ['meansvm']# 'patchsvm']
 C_values     = np.linspace(1., 100, 2)
-gamma_values = np.logspace(-10, 0,2)
+gamma_values = np.logspace(-10, 0, 2)
 
 for svm_model in svm_models:
     for c in C_values:
         for gamma in gamma_values:
-            model_names.append('{}_{}_{}'.format(svm_model, c, gamma))
+            model_names.append('{}--{}--{}'.format(svm_model, c, gamma))
 
-# model_names = ["linear", "linear-linvar", "simple_cnn", "simple_cnn-linvar"]
+# model_names = ["linear", "linear--linvar", "simple_cnn", "simple_cnn--linvar"]
 
 """
 TODO:
@@ -87,15 +89,11 @@ def cv_experiment(data, model_name, col_test_data, epochs=100, batch_size=8):
         test_acc = evaluate_on_test_set(model, model_name, col_test_data)
 
     K.clear_session()
-    if isinstance(cvacc, np.ndarray)or isinstance(cvacc, list):
-        result = (test_acc[1], cvacc[1])
+    if len(cvacc) == 3:
+        result = (test_acc[1:3], cvacc[1:3])
     else:
         result = test_acc, cvacc
-
-    if test_acc is None:
-        return result[1]
-    else:
-        return result
+    return result
 
 def train_test_experiment(data, model_name, col_test_data, epochs=100, batch_size=8):
 
@@ -115,8 +113,8 @@ def train_test_experiment(data, model_name, col_test_data, epochs=100, batch_siz
     
     test_acc = evaluate_on_test_set(model, model_name, col_test_data)
         
-    if isinstance(train_acc, np.ndarray)or isinstance(train_acc, list):
-        result = (test_acc[1],train_acc[1])
+    if len(cvacc) == 3:
+        result = (test_acc[1:3], train_acc[1:3])
     else:
         result = test_acc, train_acc
 
@@ -159,25 +157,35 @@ def visualize_filter(data, model_name, col_test_data):
 
 
 def run_on_all(experiment):
-    results = {}
+    cols = ['data_name','prepr_name','model_name', 'param_c', 'param_gamma', 'param_linvar', 'test_acc', 'test_f1', 'cv_acc', 'cv_f1']
+    results = pd.DataFrame(columns=cols)
     for data_name, kwargs in data_path.items():
 
         if data_name == "columbia-test": continue # don't use the test set for training
-        results[data_name]={}
-        for Preprocessor in [RhythmData, MIRData]:
+        for Preprocessor in [RhythmData]:#, MIRData, SpectroData]:
             prepr_name = Preprocessor.__name__
             data = Preprocessor(**kwargs)
-            
-            results[data_name][prepr_name]={}
 
             col_test_data = Preprocessor(**data_path["columbia-test"])
             for model_name in model_names:
                 print("---------------- Experiment for {} on {}({})".format(
                     model_name, Preprocessor.__name__, data_name))
                 result = experiment(data, model_name, col_test_data)
-                results[data_name][prepr_name][model_name] = result
-                print(result)
-
+                split_model = model_name.split('--')
+                print(split_model)
+                if split_model[-1] == 'linvar':
+                    param_linvar = True
+                else:
+                    param_linvar = None
+                if len(split_model) > 1:
+                    param_c, param_gamma = split_model[1:3]
+                else:
+                    param_c, param_gamma = (None, None)
+                model_name = split_model[0]
+                df_vals = [data_name, prepr_name, model_name, param_c, param_gamma, param_linvar]
+                flattened = [val for sublist in result for val in sublist]
+                df_vals.extend(flattened[0:4])
+                results = results.append(pd.DataFrame(dict(zip(cols, df_vals)), index=[0]), ignore_index=True)
     return results
 
 
@@ -185,55 +193,27 @@ if __name__ == "__main__":
 
     if not os.path.exists('results'):
         os.mkdir('results')
-    save_file_name = 'results/{}_results.pickle'.format(RUN_NAME)
+    save_file_name = 'results/{}_results.csv'.format(RUN_NAME)
    
 
     if not os.path.exists(save_file_name):
         print('no save file found... calc it')
         results = run_on_all(cv_experiment)
-        with open(save_file_name, 'wb') as handle:
-                pickle.dump(results, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        results.to_csv(save_file_name, index=False)
         print('...saved results')
     else:
-        with open(save_file_name, 'rb') as handle:
-                results = pickle.load(handle)
+        results = pd.read_csv(save_file_name)
         print('...loaded results from file')
-
-    if not os.path.exists(save_file_name):
-        results = run_on_all(cv_experiment)
-        np.savez(save_file_name, results)
-    else:
-        results=np.load(save_file_name)
 
     print('\n -------- ') 
     print('|RESULTS:|')
     print(' -------- ') 
-    for data_name, data_results in results.items():
-        print('\n---> {} <---'.format(data_name))
 
-        topacc=0.
-        topmod=None
-        tuple_res=False
-
-        for prepr_name, prepr_res in data_results.items():
-
-            for model_name, res in prepr_res.items():
-
-                tuple_res = False
-                if isinstance(res, list) or isinstance(res, np.ndarray) or isinstance(res, tuple):
-                    acc = res[1]
-                    tuple_res = True
-                else:
-                    acc = res
-
-                if acc > topacc:
-                    topacc=acc
-                    topres=res
-                    topmod=model_name
-                    topprepr=prepr_name
-
-        print('Best model: {}'.format(topmod))
-        print('(On {})'.format(topprepr))
-        print('Model Selection Accuracy: {}'.format(topacc))
-        if tuple_res:
-            print('Out of sample acc on Columbia-Test: {}'.format(topres[0]))
+    #best_overall_run = results.iloc[results[["cv_acc"]].idxmax()]
+    #print(best_overall_run)
+    #best_run_per_dataset = results.groupby("data_name")["cv_acc"].apply(np.idxmax())
+    #best_run_per_model = results.groupby("model_name")["cv_acc"].apply(np.idxmax())
+    #print('Best model: {}'.format(best_overall_run["model_name"]))
+    #print('(On {})'.format(best_overall_run["prepr_name"]))
+    #print('Model Selection Accuracy: {}'.format(best_overall_run["cv_acc"]))
+    print(results)
