@@ -44,5 +44,8 @@ def cv(X, y, method, train_fun, nfolds=10, nrepetitions=5, shuffle=True):
                         evaluation = model.evaluate(X_val, y_val, verbose=0)
 
                         evals.append(evaluation)
+                        print('cv: finished fold {}/{}'.format(f_idx+1, nfolds))
+                        print('(score was {})'.format(evaluation))
+
 
         return np.mean(evals, axis=0) #, np.mean(evals_reinit, axis=0)
