@@ -177,7 +177,7 @@ def run_on_all(experiment):
                     param_linvar = True
                 else:
                     param_linvar = None
-                if len(split_model) > 1:
+                if len(split_model) > 2:
                     param_c, param_gamma = split_model[1:3]
                 else:
                     param_c, param_gamma = (None, None)
@@ -209,11 +209,11 @@ if __name__ == "__main__":
     print('|RESULTS:|')
     print(' -------- ') 
 
-    #best_overall_run = results.iloc[results[["cv_acc"]].idxmax()]
-    #print(best_overall_run)
-    #best_run_per_dataset = results.groupby("data_name")["cv_acc"].apply(np.idxmax())
-    #best_run_per_model = results.groupby("model_name")["cv_acc"].apply(np.idxmax())
-    #print('Best model: {}'.format(best_overall_run["model_name"]))
-    #print('(On {})'.format(best_overall_run["prepr_name"]))
-    #print('Model Selection Accuracy: {}'.format(best_overall_run["cv_acc"]))
+    best_overall_run = results.iloc[results[["cv_acc"]].idxmax()]
+    print(best_overall_run)
+    best_run_per_dataset = results.groupby("data_name")["cv_acc"].idxmax()# .apply(np.argmax)
+    best_run_per_model = results.groupby("model_name")["cv_acc"].idxmax()# .apply(np.argmax)
+    print('Best model: {}'.format(best_overall_run["model_name"]))
+    print('(On {})'.format(best_overall_run["prepr_name"]))
+    print('Model Selection Accuracy: {}'.format(best_overall_run["cv_acc"]))
     print(results)
