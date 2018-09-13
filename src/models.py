@@ -272,5 +272,5 @@ class TimestampAggregator():
     
     def evaluate(self, X, Y, *args, **kwargs):
         Y_ = self.predict(X)
-        return log_loss(Y, Y_), np.mean((Y_>0.5)==(Y>0.5)), f1_score(Y, Y_)
+        return log_loss(Y, Y_), np.mean((Y_>0.5)==(Y>0.5)), f1_score((Y_>0.5), (Y>0.5))
 
