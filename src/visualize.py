@@ -1,13 +1,14 @@
 from matplotlib import pyplot as plt
 import numpy as np
 from keras.models import Model
+import pdb
 
 """
 In this file, music and speach always mean single audio files and are of the shape: X.shape[1:]
 - only the batch dimension is cut off
 """
 
-def linear_transition(music, speech, start, end, model):
+def linear_transition(music, speech, start, end, model, result_dir=None):
     """
     Creates an audio with a linear transition from music to speech in the interval [start, end]
     """
@@ -46,21 +47,24 @@ def linear_transition(music, speech, start, end, model):
     plt.plot(timesteps, 1-w, "--", label="t(Music | audio)")
     plt.title("Linear Transition - music to speech\ncorr(p,t) = {}".format(corr))
 
-
-
     plt.legend()
-    plt.show()
+
+    if result is None:
+        plt.show()
+    else:
+        plt.savefig(result_dir + "/score_over_time_transition.png".format(name))
+
     plt.clf()
 
 
-def prediction_over_time(music, speech, model):
+def prediction_over_time(music, speech, model, result_dir=None):
     """
     Plots for some audio files the prediction over time
     Also plots the prediction over time for mixed signals 
     """
     model = Model(inputs=model.input,
                   outputs=model.layers[-2].output)
-
+    pdb.set_trace()
     Y_p = model.predict(np.array([music, speech]))[:,0,:,0]
     print("Y_p", Y_p.shape)
 
@@ -69,7 +73,10 @@ def prediction_over_time(music, speech, model):
         plt.plot(list(range(len(y_time))), y_time)
         plt.plot(list(range(len(y_time))), [np.mean(y_time)]*len(y_time), "--")
         plt.title(name)
-        plt.show()
+        if result is None:
+            plt.show()
+        else:
+            plt.savefig(result_dir+"/score_over_time_{}.png".format(name))
         plt.clf()
 
 
