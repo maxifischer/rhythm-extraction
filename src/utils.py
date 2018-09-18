@@ -6,6 +6,8 @@ def cv(X, y, method, train_fun, nfolds=10, nrepetitions=5, shuffle=True):
         N = X.shape[0]
         for rep in range(nrepetitions):
 
+                print('......begin iteration {}/{}'.format(rep+1, nrepetitions))
+
                 # shuffle data
                 if shuffle:
                         I = np.random.permutation(N)

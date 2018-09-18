@@ -19,16 +19,15 @@ from keras.layers import Dense, Dropout, Flatten, Lambda
 from keras.layers import Conv2D, MaxPooling2D
 from keras import backend as K
 from keras.models import Model
-from sklearn.metrics import log_loss
+from sklearn.metrics import log_loss, confusion_matrix
 
-import pickle
 import pandas as pd
 pd.set_option('display.max_columns', 15)
 
 MUSIC = 1
 SPEECH = 0
 
-RUN_NAME='test'
+RUN_NAME='classaccs_test'
 
 data_path = {
                 "GTZAN": {
@@ -52,15 +51,17 @@ model_names = []#["meansvm--4.--0.001", "meansvm--10.--0.001", "meansvm", "linea
 
 # SVM gridsearch values
 svm_models = ['meansvm']# 'patchsvm']
-C_values     = np.linspace(1., 100, 2)
-gamma_values = np.logspace(-10, 0, 2)
+C_values     = np.linspace(1, 100, 20)# [96.]  #np.linspace(1., 100, 2)
+gamma_values = np.logspace(-10, 0, 30)# [1e-6] #np.logspace(-10, 0, 2)
 
 for svm_model in svm_models:
     for c in C_values:
         for gamma in gamma_values:
             model_names.append('{}--{}--{}'.format(svm_model, c, gamma))
 
-# model_names = ["linear", "linear--linvar", "simple_cnn", "simple_cnn--linvar"]
+# model_names.extend(["simple_cnn--linvar", "simple_cnn", "linear--linvar"])# "linear", "linear--linvar", "simple_cnn", "simple_cnn--linvar"]
+
+model_names = ["simple_cnn"]# , "simple_cnn--linvar"]
 
 """
 TODO:
@@ -68,7 +69,7 @@ TODO:
 - a way to get load or (train and save) a model for the evaluation stuff
 """
 
-def cv_experiment(data, model_name, col_test_data, epochs=100, batch_size=8):
+def cv_experiment(data, model_name, col_test_data, epochs=100, batch_size=8, nfolds=5, nrepetitions=1):
 
     input_shape = data.X.shape[1:]
     model = get_model(model_name, input_shape)
@@ -81,16 +82,18 @@ def cv_experiment(data, model_name, col_test_data, epochs=100, batch_size=8):
                                         batch_size=batch_size,
                                         epochs=epochs, verbose=0)
 
-    cvacc = cv(data.X, data.Y, get_fresh_model, train_model, nfolds=5, nrepetitions=1)
+    cvacc = cv(data.X, data.Y, get_fresh_model, train_model, nfolds=nfolds, nrepetitions=nrepetitions)
 
     test_acc = None
     if col_test_data is not None: 
         train_model(model, data.X, data.Y)
         test_acc = evaluate_on_test_set(model, model_name, col_test_data)
 
+    print('cvacc output is of length {}'.format(len(cvacc)))  
+
     K.clear_session()
-    if len(cvacc) == 3:
-        result = (test_acc[1:3], cvacc[1:3])
+    if len(cvacc) == 5:
+        result = (test_acc[1:], cvacc[1:])
     else:
         result = test_acc, cvacc
     return result
@@ -106,15 +109,15 @@ def train_test_experiment(data, model_name, col_test_data, epochs=100, batch_siz
 
     train_model = lambda model, X, Y: model.fit(X, Y,
                                         batch_size=batch_size,
-                                        epochs=epochs, verbose=0)
+                                        epochs=epochs)
 
     train_model(model, data.X, data.Y)
     train_acc = model.evaluate(data.X, data.Y)
     
     test_acc = evaluate_on_test_set(model, model_name, col_test_data)
         
-    if len(cvacc) == 3:
-        result = (test_acc[1:3], train_acc[1:3])
+    if len(train_acc) == 5:
+        result = (test_acc[1:], train_acc[1:])
     else:
         result = test_acc, train_acc
 
@@ -122,16 +125,26 @@ def train_test_experiment(data, model_name, col_test_data, epochs=100, batch_siz
 
     return result
 
-def evaluate_on_test_set(model, model_name, col_test_data):
+def evaluate_on_test_set(model, model_name, col_test_data, return_conf_matrix=False):
     
     try:
-        test_acc  = model.evaluate(col_test_data.X, col_test_data.Y)
+
+        if return_conf_matrix:
+            test_predictions  = model.predict(col_test_data.X)
+            test_acc = confusion_matrix(col_test_data.Y, test_predictions)
+        else:
+            test_acc  = model.evaluate(col_test_data.X, col_test_data.Y)
     except ValueError:
         # if the test set has a different time length then the train set, try to reshape the model and test then
         test_input_shape = col_test_data.X.shape[1:]
         model_weights = model.get_weights()
         reshaped_model = reshape_keras_conv_input(model_name, test_input_shape, model_weights)
-        test_acc  = reshaped_model.evaluate(col_test_data.X, col_test_data.Y)
+
+        if return_conf_matrix:
+            test_predictions = reshaped_model.predict(col_test_data.X)
+            test_acc = confusion_matrix(col_test_data.Y, test_predictions)
+        else:
+            test_acc = reshaped_model.evaluate(col_test_data.X, col_test_data.Y)
 
     return test_acc
 
@@ -157,12 +170,12 @@ def visualize_filter(data, model_name, col_test_data):
 
 
 def run_on_all(experiment):
-    cols = ['data_name','prepr_name','model_name', 'param_c', 'param_gamma', 'param_linvar', 'test_acc', 'test_f1', 'cv_acc', 'cv_f1']
+    cols = ['data_name','prepr_name','model_name', 'param_c', 'param_gamma', 'param_linvar', 'test_acc', 'test_f1', 'test_acc_pc', 'test_acc_nc', 'cv_acc', 'cv_f1', 'cv_acc_pc', 'cv_acc_nc']
     results = pd.DataFrame(columns=cols)
     for data_name, kwargs in data_path.items():
 
         if data_name == "columbia-test": continue # don't use the test set for training
-        for Preprocessor in [RhythmData]:#, MIRData, SpectroData]:
+        for Preprocessor in [RhythmData]:#[RhythmData, MIRData, SpectroData]:
             prepr_name = Preprocessor.__name__
             data = Preprocessor(**kwargs)
 
@@ -172,7 +185,8 @@ def run_on_all(experiment):
                     model_name, Preprocessor.__name__, data_name))
                 result = experiment(data, model_name, col_test_data)
                 split_model = model_name.split('--')
-                print(split_model)
+                print('finished cv, result:')
+                print(result)
                 if split_model[-1] == 'linvar':
                     param_linvar = True
                 else:
@@ -184,7 +198,7 @@ def run_on_all(experiment):
                 model_name = split_model[0]
                 df_vals = [data_name, prepr_name, model_name, param_c, param_gamma, param_linvar]
                 flattened = [val for sublist in result for val in sublist]
-                df_vals.extend(flattened[0:4])
+                df_vals.extend(flattened[0:8])
                 results = results.append(pd.DataFrame(dict(zip(cols, df_vals)), index=[0]), ignore_index=True)
     return results
 

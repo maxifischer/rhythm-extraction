@@ -10,7 +10,7 @@ from keras.layers import Conv2D, MaxPooling2D
 from keras import backend as K
 from keras.models import Model
 
-from sklearn.metrics import log_loss, f1_score
+from sklearn.metrics import log_loss, f1_score, confusion_matrix
 from sklearn.svm import SVC
 
 class OLSPatchRegressor():
@@ -51,7 +51,8 @@ class OLSPatchRegressor():
 
     def evaluate(self, X, y, **kwargs):
         y_pred = (np.sign(self.predict(X)-.5)+ 1)/2
-        return np.mean(y_pred == y), f1_score(y, y_pred)
+        p_acc, n_acc = class_accs(y, y_pred) 
+        return np.mean(y_pred == y), f1_score(y, y_pred), p_ac, n_acc
 
 class PatchSVM():
     def __init__(self, C=10, patch_width=100, patch_stride=100, kernel='rbf', gamma=1e-5):
@@ -99,7 +100,8 @@ class PatchSVM():
 
     def evaluate(self, X, Y, **kwargs):
         y_pred = self.predict(X)
-        return np.mean(y_pred == Y), f1_score(y, y_pred)
+        p_acc, n_acc = class_accs(Y, y_pred) 
+        return np.mean(y_pred == Y), f1_score(Y, y_pred), p_ac, n_acc
 
 class MeanSVM():
     def __init__(self, C=10, kernel='rbf', gamma=0.000001):
@@ -131,7 +133,8 @@ class MeanSVM():
         return self.svm.predict(X_meaned)
     def evaluate(self, X, Y, **kwargs):
         y_pred = self.predict(X)
-        return np.mean(y_pred == Y), f1_score(Y, y_pred)
+        p_acc, n_acc = class_accs(Y, y_pred) 
+        return np.mean(y_pred == Y), f1_score(Y, y_pred), p_ac, n_acc
 
 def get_model(modelname, input_shape):
 
@@ -176,7 +179,7 @@ def get_model(modelname, input_shape):
 
         model.compile(loss=keras.losses.binary_crossentropy,
                       optimizer=keras.optimizers.Adadelta(),
-                      metrics=['accuracy', f1])
+                      metrics=['accuracy', f1,pc_class_accs, nc_class_accs])
         
         return model
 
@@ -184,7 +187,7 @@ def get_model(modelname, input_shape):
     elif modelname == 'linear':
         # linear model
 
-        time_filter_size = 3
+        time_filter_size = 50
 
         model = Sequential()
         model.add(Conv2D(1, kernel_size=(num_frequencies, time_filter_size),
@@ -195,7 +198,8 @@ def get_model(modelname, input_shape):
 
         model.compile(loss=keras.losses.binary_crossentropy,
                       optimizer=keras.optimizers.Adadelta(),
-                      metrics=['accuracy', f1])
+                      # metrics=['accuracy', f1])
+                      metrics=['accuracy', f1,pc_class_accs, nc_class_accs])
         
         return model
 
@@ -272,8 +276,31 @@ class TimestampAggregator():
     
     def evaluate(self, X, Y, *args, **kwargs):
         Y_ = self.predict(X)
-        return log_loss(Y, Y_), np.mean((Y_>0.5)==(Y>0.5)), f1_score((Y_>0.5), (Y>0.5))
+        y_pred = (Y_>0.5)
+        p_acc, n_acc = class_accs(Y, y_pred) 
+        return log_loss(Y, Y_), np.mean((Y_>0.5)==(Y>0.5)), f1_score((Y_>0.5), (Y>0.5)), p_acc, n_acc
 
+
+def class_accs(y_true, y_pred):
+    tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+    return tp / (tp + fn), tn / (tn + fp) 
+
+def pc_class_accs(y_true, y_pred):
+    # accuracy on +1 class is the recall
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+    recall = true_positives / (possible_positives + K.epsilon())
+    return recall
+
+def nc_class_accs(y_true, y_pred):
+    # swap labels and return recall
+    y_true = 1 - y_true
+    y_pred = 1 - y_pred
+
+    true_negatives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    possible_negatives = K.sum(K.round(K.clip(y_true, 0, 1)))
+    recall = true_negatives / (possible_negatives + K.epsilon())
+    return recall
 
 # taken from Ronak Agrawal's answer on stackoverflow:
 # https://stackoverflow.com/questions/43547402/how-to-calculate-f1-macro-in-keras
