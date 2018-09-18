@@ -9,7 +9,7 @@ import madmom
 import sys
 sys.path.append('../src')
 from preprocessing import RhythmData, SpectroData, MIRData
-from models import OLSPatchRegressor, get_model, reset_weights, reshape_keras_conv_input
+from models import *
 from utils import cv
 import visualize
 
@@ -21,8 +21,13 @@ from keras import backend as K
 from keras.models import Model
 from sklearn.metrics import log_loss, confusion_matrix
 
+import matplotlib
+
+import pickle
 import pandas as pd
 pd.set_option('display.max_columns', 15)
+
+import pdb
 
 MUSIC = 1
 SPEECH = 0
@@ -63,13 +68,11 @@ for svm_model in svm_models:
 
 model_names = ["simple_cnn"]# , "simple_cnn--linvar"]
 
-"""
-TODO:
-- a way to save results, maybe in pandas
-- a way to get load or (train and save) a model for the evaluation stuff
-"""
+def cv_experiment(data, model_name, col_test_data, epochs=100, batch_size=8, nfolds=2, nrepetitions=1):
+    """
 
-def cv_experiment(data, model_name, col_test_data, epochs=100, batch_size=8, nfolds=5, nrepetitions=1):
+    :return: ((test accuracy on columbia test data set, f1 score on col test, test acc on colubia test positive class only, test acc on columbia test negative class only), (cv acc on train data, cv f1 score on train data, cv acc on train data pos class only, cv acc on train data neg class only))
+    """
 
     input_shape = data.X.shape[1:]
     model = get_model(model_name, input_shape)
@@ -87,6 +90,7 @@ def cv_experiment(data, model_name, col_test_data, epochs=100, batch_size=8, nfo
     test_acc = None
     if col_test_data is not None: 
         train_model(model, data.X, data.Y)
+
         test_acc = evaluate_on_test_set(model, model_name, col_test_data)
 
     print('cvacc output is of length {}'.format(len(cvacc)))  
@@ -97,6 +101,7 @@ def cv_experiment(data, model_name, col_test_data, epochs=100, batch_size=8, nfo
     else:
         result = test_acc, cvacc
     return result
+
 
 def train_test_experiment(data, model_name, col_test_data, epochs=100, batch_size=8):
 
@@ -151,22 +156,142 @@ def evaluate_on_test_set(model, model_name, col_test_data, return_conf_matrix=Fa
 """
 The following stuff happens for trained models
 """
-def important_channels(data, model_name, col_test_data):
+def get_trained_model(data, model_name, epochs=100, batch_size=8):
+    input_shape = data.X.shape[1:]
+    model = get_model(model_name, input_shape)
+    result_dir = "results/{}--{}".format(data.__class__.__name__, model_name)
+    os.makedirs(result_dir, exist_ok=True)
+    weight_path = join(result_dir, "weights.h5")
+
+    def get_fresh_model(model=model):
+        reset_weights(model)
+        return model
+
+    train_model = lambda model, X, Y: model.fit(X, Y,
+                                                batch_size=batch_size,
+                                                epochs=epochs, verbose=0)
+    try:
+        model.load_weights(weight_path)
+    except:
+        train_model(model, data.X, data.Y)
+        try:
+            model.save(weight_path)
+        except: pass
+    return model
+
+def get_accuracy(data, model_name, model, col_test_data):
+    r = cv_experiment(data, model_name, col_test_data)
+    result_dir = "results/{}--{}".format(data.__class__.__name__, model_name)
+    with open(join(result_dir, "accuracy.txt"), "w") as f:
+        f.write("Test Accuracy: {}\nTest f1 Score: {}\nCV Accuracy: {}\nCV f1 score {}".format(
+            r[0][0], r[0][1], r[1][0], r[1][1]))
+
+
+def important_channels(data, model_name, model, col_test_data):
+    result_dir = "results/{}--{}".format(data.__class__.__name__, model_name)
+    # TODO
     pass
 
-def visualize_prediction_over_time(data, model_name, col_test_data):
+def visualize_prediction_over_time(data, model_name, model, music_sample, speech_sample):
+    result_dir = "results/{}--{}".format(data.__class__.__name__, model_name)
     # plot for some samples the prediction over time, and also for a transition of music to speech
     # including correlation
-    pass
+    visualize.prediction_over_time(music_sample, speech_sample, model, result_dir)
 
-def analyze_error(data, model_name, col_test_data):
+def analyze_error(data, model_name, model, col_test_data):
+    result_dir = "results/{}--{}".format(data.__class__.__name__, model_name)
     # check false positives/false negatives
     # plot the expected probability of false positives/false negatives under the iid assumption for different timesteps
+    # TODO
     pass
 
-def visualize_filter(data, model_name, col_test_data):
-    if data.__class__ != SpectroData: return
-    pass
+def visualize_filter(data, model_name, model, col_test_data, music_sample, speech_sample):
+    result_dir = "results/{}--{}".format(data.__class__.__name__, model_name)
+    if data.__class__ != SpectroData or isinstance(model, (PatchSVM, MeanSVM)): return
+
+    W_all, i = None, -1
+    while W_all is None:
+        i += 1
+        try:
+            W_all = model.layers[i].get_weights()[0]
+        except:
+            pass
+
+    inspect_model = Model(inputs=model.input, outputs=model.layers[i].output)
+    music_activation = inspect_model.predict(music_sample)[0, 0]
+    speech_activation = inspect_model.predict(speech_sample)[0, 0]
+
+    time = np.arange(0, 30, 30 / music_activation.shape[0])
+
+    num_output_channels = W_all.shape[-1]
+
+    for output_channel in range(num_output_channels):
+        W = W_all[:, :, :, output_channel]
+        bound = np.max(np.absolute(W))
+        norm = matplotlib.colors.Normalize(vmin=-bound, vmax=bound)
+
+        num_filters = W.shape[-1]
+        num_subplots = 3 * num_filters
+
+        fig = plt.figure(figsize=(12, 9))
+
+        for channel in range(num_filters):
+            w_channel = W[:, :, channel]
+            w_plus = np.maximum(w_channel, 0)
+            w_minus = -np.maximum(-w_channel, 0)
+            plt.subplot(num_filters + 1, 3, 1 + channel * 3)
+            plt.imshow(w_channel, cmap="PuOr", norm=norm)
+            plt.colorbar()
+
+            plt.subplot(num_filters + 1, 3, 2 + channel * 3)
+            plt.imshow(w_plus, cmap="PuOr", norm=norm)
+            plt.colorbar()
+            if MODEL == "LINEAR":
+                plt.title("Evidence for music")
+
+            plt.subplot(num_filters + 1, 3, 3 + channel * 3)
+            plt.imshow(w_minus, cmap="PuOr", norm=norm)
+            plt.colorbar()
+            if MODEL == "LINEAR":
+                plt.title("Evidence for speech")
+
+        plt.subplot(num_filters + 1, 1, num_filters + 1)
+        plt.plot(time, music_activation[:, output_channel], label="Music")
+        plt.plot(time, speech_activation[:, output_channel], label="Speech")
+        plt.xlabel("Time/s")
+        plt.ylabel("Channel activation")
+        plt.legend()
+
+        plt.tight_layout()
+        plt.savefig("{}/filter.png".format(result_dir))
+        plt.show()
+
+
+def analyze_trained_models():
+    MUSIC = 1
+    SPEECH = 0
+
+    for data_name, kwargs in data_path.items():
+
+        if data_name == "columbia-test": continue  # don't use the test set for training
+        for Preprocessor in [RhythmData, MIRData, SpectroData]:
+            prepr_name = Preprocessor.__name__
+            data = Preprocessor(**kwargs)
+
+            col_test_data = Preprocessor(**data_path["columbia-test"])
+
+            for model_name in model_names:
+                print("\n\n-------\nAnalyze {} on {}".format(model_name, data_name))
+                music_sample    = col_test_data.X[col_test_data.Y == MUSIC][0][None, ...]
+                speech_sample   = col_test_data.X[col_test_data.Y != MUSIC][0][None, ...]
+
+                model = get_trained_model(data, model_name)
+                get_accuracy(data, model_name, model, col_test_data)
+                visualize_prediction_over_time(data, model_name, model, music_sample, speech_sample)
+                analyze_error(data, model_name, model, col_test_data)
+                important_channels(data, model_name, model, col_test_data)
+                visualize_filter(data, model_name, model, col_test_data, music_sample, speech_sample)
+
 
 
 def run_on_all(experiment):
@@ -187,6 +312,7 @@ def run_on_all(experiment):
                 split_model = model_name.split('--')
                 print('finished cv, result:')
                 print(result)
+                
                 if split_model[-1] == 'linvar':
                     param_linvar = True
                 else:
@@ -195,22 +321,35 @@ def run_on_all(experiment):
                     param_c, param_gamma = split_model[1:3]
                 else:
                     param_c, param_gamma = (None, None)
+
                 model_name = split_model[0]
                 df_vals = [data_name, prepr_name, model_name, param_c, param_gamma, param_linvar]
                 flattened = [val for sublist in result for val in sublist]
                 df_vals.extend(flattened[0:8])
                 results = results.append(pd.DataFrame(dict(zip(cols, df_vals)), index=[0]), ignore_index=True)
+
+                #test_acc, test_f1 = result[0][0], result[0][1]
+                #cv_acc, cv_f1 = result[1][0], result[1][1]
+
+                #df_vals = [data_name, prepr_name, model_name, param_c, param_gamma, param_linvar, test_acc, test_f1, cv_acc, cv_f1]
+                #results.loc[results.shape[0]] = df_vals
+
+                #flattened = [val for sublist in result for val in sublist]
+                #df_vals.extend(flattened[0:4])
+                #results = results.append(pd.DataFrame(dict(zip(cols, df_vals)), index=[0]), ignore_index=True)
     return results
 
 
 if __name__ == "__main__":
+    # analyze_trained_models()
+    # exit()
 
     if not os.path.exists('results'):
         os.mkdir('results')
     save_file_name = 'results/{}_results.csv'.format(RUN_NAME)
    
 
-    if not os.path.exists(save_file_name):
+    if True or not os.path.exists(save_file_name):
         print('no save file found... calc it')
         results = run_on_all(cv_experiment)
         results.to_csv(save_file_name, index=False)

@@ -1,0 +1,4 @@
+Test Accuracy: 0.875
+Test f1 Score: 0.871794867515564
+CV Accuracy: 0.6646153926849365
+CV f1 score 0.699429702758789
