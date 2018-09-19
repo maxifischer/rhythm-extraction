@@ -209,6 +209,7 @@ def analyze_error(data, model_name, model, col_test_data):
 def visualize_filter(data, model_name, model, col_test_data, music_sample, speech_sample):
     original_len = music_sample.shape[1]
     target_len = model.input_shape[2]
+    T_ORIGINAL = 30*original_len/target_len
     if original_len < target_len:
         m, s = np.zeros(model.input_shape[1:]), np.zeros(model.input_shape[1:])
         m[:, :original_len] = music_sample
@@ -233,7 +234,7 @@ def visualize_filter(data, model_name, model, col_test_data, music_sample, speec
     music_activation = inspect_model.predict(music_sample)[0, 0]
     speech_activation = inspect_model.predict(speech_sample)[0, 0]
 
-    time = np.arange(0, 30, 30 / music_activation.shape[0])
+    time = np.arange(0, T_ORIGINAL, T_ORIGINAL / music_activation.shape[0])
 
     num_output_channels = W_all.shape[-1]
 
@@ -279,6 +280,91 @@ def visualize_filter(data, model_name, model, col_test_data, music_sample, speec
         plt.savefig("{}/filter-channel-{}.png".format(result_dir, output_channel))
 
 
+def plot_channel_activation(music, speech, export_path, seconds=15):
+    num_channels = speech.shape[-1]
+    time = np.arange(0, seconds, seconds / music.shape[1])
+    os.makedirs(export_path, exist_ok=True)
+
+    for channel in range(num_channels):
+        plt.plot(time, music[0,:, channel], label="Music")
+        plt.plot(time, speech[0,:, channel], label="Speech")
+        plt.xlabel("Time/s")
+        plt.ylabel("Activation")
+        plt.title("Channel {}".format(channel))
+        plt.legend()
+        plt.savefig(export_path+"/channel-{}-sample.png".format(channel))
+        plt.clf()
+
+def plot_channel_activations(all_music, all_speech, export_path, seconds=15):
+    num_channels = all_speech.shape[-1]
+    time = np.arange(0, seconds, seconds / all_music.shape[2])
+    os.makedirs(export_path, exist_ok=True)
+
+    for channel in range(num_channels):
+        label = "Music"
+        for music in all_music:
+            plt.plot(time, music[0,:, channel], color="green", label=label)
+            label=None # do only one music label, not multiples
+        label = "Speech"
+        for speech in all_speech:
+            plt.plot(time, speech[0,:, channel], color="red", label=label)
+            label=None
+        plt.xlabel("Time/s")
+        plt.ylabel("Activation")
+        plt.title("Channel {}".format(channel))
+        plt.legend()
+        plt.savefig(export_path+"/channel-{}-all-samples.png".format(channel))
+        plt.clf()
+
+def plot_channel_activations_mv(all_music, all_speech, export_path, seconds=15):
+    num_channels = all_speech.shape[-1]
+    time = np.arange(0, seconds, seconds / all_music.shape[2])
+    os.makedirs(export_path, exist_ok=True)
+
+    for channel in range(num_channels):
+        music_m = np.mean(all_music[:, 0, :, channel], axis=0)
+        music_v = np.var(all_music[:, 0, :, channel], axis=0)
+        speech_m = np.mean(all_speech[:, 0, :, channel], axis=0)
+        speech_v = np.var(all_speech[:, 0, :, channel], axis=0)
+
+        plt.plot(time, music_m, label="Music", color="green")
+        plt.plot(time, music_m+music_v, "--", color="green")
+        plt.plot(time, music_m-music_v, "--", color="green")
+        plt.plot(time, speech_m, label="Speech", color="red")
+        plt.plot(time, speech_m+speech_v, "--", color="red")
+        plt.plot(time, speech_m-speech_v, "--", color="red")
+
+        plt.xlabel("Time/s")
+        plt.ylabel("Activation")
+        plt.title("Channel {}".format(channel))
+        plt.legend()
+        plt.savefig(export_path+"/channel-{}-mv.png".format(channel))
+        plt.clf()
+
+
+def visualize_channel_activation():
+    MUSIC = 1
+    SPEECH = 0
+
+    for data_name, kwargs in data_path.items():
+
+        if data_name == "columbia-test": continue  # don't use the test set for training
+        for Preprocessor in [RhythmData, MIRData]:
+            prepr_name = Preprocessor.__name__
+            data = Preprocessor(**kwargs)
+
+            col_test_data = Preprocessor(**data_path["columbia-test"])
+
+            music = col_test_data.X[col_test_data.Y == MUSIC]
+            speech = col_test_data.X[col_test_data.Y != MUSIC]
+            music_sample = random.choice(music)
+            speech_sample = random.choice(speech)
+
+            plot_channel_activation(music_sample, speech_sample, "../results/{}".format(prepr_name))
+            plot_channel_activations(music, speech, "../results/{}".format(prepr_name))
+            plot_channel_activations_mv(music, speech, "../results/{}".format(prepr_name))
+
+
 def analyze_trained_models():
     MUSIC = 1
     SPEECH = 0
@@ -292,13 +378,14 @@ def analyze_trained_models():
 
             col_test_data = Preprocessor(**data_path["columbia-test"])
 
+            music_sample    = random.choice(col_test_data.X[col_test_data.Y == MUSIC])
+            speech_sample   = random.choice(col_test_data.X[col_test_data.Y != MUSIC])
+
             print("Col test data \nX: {}, Y: {}".format(col_test_data.X.shape, col_test_data.Y.shape))
 
 
             for model_name in model_names:
                 print("\n\n-------\nAnalyze {} on {} - {}".format(model_name, data_name, prepr_name))
-                music_sample    = random.choice(col_test_data.X[col_test_data.Y == MUSIC])
-                speech_sample   = random.choice(col_test_data.X[col_test_data.Y != MUSIC])
 
                 print("music sample: ", music_sample.shape)
 
@@ -360,7 +447,8 @@ def run_on_all(experiment):
 
 
 if __name__ == "__main__":
-    analyze_trained_models()
+    visualize_channel_activation()
+    #analyze_trained_models()
     exit()
 
     if not os.path.exists('results'):
