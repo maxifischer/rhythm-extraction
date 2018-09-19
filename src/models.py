@@ -13,6 +13,10 @@ from keras.models import Model
 from sklearn.metrics import log_loss, f1_score, confusion_matrix
 from sklearn.svm import SVC
 
+FILTER_SIZE = "small"
+
+assert FILTER_SIZE in ["small", "big"]
+
 class OLSPatchRegressor():
     def __init__(self, patch_width=5, k=0.001):
         self.w = None
@@ -184,6 +188,25 @@ def get_model(modelname, input_shape):
         
         return model
 
+    elif modelname == 'big_cnn':
+
+        time_filter_size = 200
+
+        # simple cnn with very narrow filters in the time axis
+        model = Sequential()
+        model.add(MaxPooling2D(pool_size=(1, 3), input_shape=input_shape))
+        model.add(Conv2D(32, kernel_size=(num_frequencies, time_filter_size),
+                         activation='relu'))
+
+        model.add(Conv2D(1, kernel_size=(1, 1), activation='sigmoid'))
+        model.add(Lambda(lambda x: K.mean(x, axis=[1, 2])))
+
+        model.compile(loss=keras.losses.binary_crossentropy,
+                      optimizer=keras.optimizers.Adadelta(),
+                      metrics=['accuracy', f1, pc_class_accs, nc_class_accs])
+
+        return model
+
 
     elif modelname == 'linear':
         # linear model
@@ -202,6 +225,25 @@ def get_model(modelname, input_shape):
                       # metrics=['accuracy', f1])
                       metrics=['accuracy', f1,pc_class_accs, nc_class_accs])
         
+        return model
+
+    elif modelname == 'big_linear':
+        # linear model
+
+        time_filter_size = 200
+
+        model = Sequential()
+        model.add(Conv2D(1, kernel_size=(num_frequencies, time_filter_size),
+                         activation='sigmoid',
+                         input_shape=input_shape))
+
+        model.add(Lambda(lambda x: K.mean(x, axis=[1, 2])))
+
+        model.compile(loss=keras.losses.binary_crossentropy,
+                      optimizer=keras.optimizers.Adadelta(),
+                      # metrics=['accuracy', f1])
+                      metrics=['accuracy', f1, pc_class_accs, nc_class_accs])
+
         return model
 
     elif modelname.endswith('--linvar'):

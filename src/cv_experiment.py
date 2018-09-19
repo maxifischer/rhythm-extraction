@@ -53,7 +53,7 @@ data_path = {
 na = np.newaxis
 
 
-model_names =["simple_cnn--linvar", "simple_cnn", "linear--linvar", "linear", "mean_svm"]
+model_names =["simple_cnn--linvar", "simple_cnn", "linear--linvar", "linear", "big_cnn--linvar", "big_cnn", "linear--linvar", "linear", "mean_svm"]
 
 # SVM gridsearch values
 def add_svm_grid():
@@ -504,7 +504,9 @@ if __name__ == "__main__":
         save_file_name = 'results/{}.csv'.format(RUN_NAME)
 
         results = run_on_all(cv_experiment)
+
         results["is_normalized"] = 1 if NORMALIZE_CHANNELS else 0
+
         results.to_csv(save_file_name, index=False)
 
         open_csv = save_file_name
