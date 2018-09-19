@@ -134,7 +134,7 @@ class MeanSVM():
     def evaluate(self, X, Y, **kwargs):
         y_pred = self.predict(X)
         p_acc, n_acc = class_accs(Y, y_pred) 
-        return np.mean(y_pred == Y), f1_score(Y, y_pred), p_ac, n_acc
+        return np.mean(y_pred == Y), f1_score(Y, y_pred), p_acc, n_acc
 
 def get_model(modelname, input_shape):
     print("get model: input shape", input_shape)

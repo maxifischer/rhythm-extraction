@@ -21,6 +21,8 @@ import pdb
 
 na = np.newaxis
 
+NORMALIZE_CHANNELS = True
+
 def crop_image_patches(X, h, w, hstride=1, wstride=1, return_2d_patches=False):
     N, H, W, D =  X.shape
     
@@ -302,7 +304,8 @@ def load_rhythm_feature_db(music_dir, speech_dir, num_samples=-1, reload=False):
 
 def normalize_channels(X):
     # divide each channel by its std dev
-    X /= np.std(X, axis=(0,1,2))[na,na,na,...] # hehe
+    if NORMALIZE_CHANNELS:
+        X /= np.std(X, axis=(0,1,2))[na,na,na,...] # hehe
     return X
 
 

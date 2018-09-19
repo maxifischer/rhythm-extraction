@@ -8,7 +8,7 @@ import madmom
 
 import sys
 sys.path.append('../src')
-from preprocessing import RhythmData, SpectroData, MIRData
+from preprocessing import RhythmData, SpectroData, MIRData, NORMALIZE_CHANNELS
 from models import *
 from utils import cv
 import visualize
@@ -33,7 +33,7 @@ import random
 MUSIC = 1
 SPEECH = 0
 
-RUN_NAME='classaccs_test'
+RUN_NAME='cluster_cv'
 
 data_path = {
                 "GTZAN": {
@@ -53,21 +53,22 @@ data_path = {
 na = np.newaxis
 
 
-model_names = []#["meansvm--4.--0.001", "meansvm--10.--0.001", "meansvm", "linear--linvar", "linear", "simple_cnn", "simple_cnn--linvar"]
+model_names =["simple_cnn--linvar", "simple_cnn", "linear--linvar", "linear", "mean_svm"]
 
 # SVM gridsearch values
-svm_models = ['meansvm']# 'patchsvm']
-C_values     = np.linspace(1, 100, 20)# [96.]  #np.linspace(1., 100, 2)
-gamma_values = np.logspace(-10, 0, 30)# [1e-6] #np.logspace(-10, 0, 2)
+def add_svm_grid():
+    svm_models = ['meansvm']# 'patchsvm']
+    C_values     = np.linspace(1, 100, 20)# [96.]  #np.linspace(1., 100, 2)
+    gamma_values = np.logspace(-10, 0, 30)# [1e-6] #np.logspace(-10, 0, 2)
 
-for svm_model in svm_models:
-    for c in C_values:
-        for gamma in gamma_values:
-            model_names.append('{}--{}--{}'.format(svm_model, c, gamma))
+    for svm_model in svm_models:
+        for c in C_values:
+            for gamma in gamma_values:
+                model_names.append('{}--{}--{}'.format(svm_model, c, gamma))
+#model_names = []
+#model_names.extend(["simple_cnn--linvar", "simple_cnn", "linear--linvar", "linear"])# "linear", "linear--linvar", "simple_cnn", "simple_cnn--linvar"]
 
-# model_names.extend(["simple_cnn--linvar", "simple_cnn", "linear--linvar"])# "linear", "linear--linvar", "simple_cnn", "simple_cnn--linvar"]
 
-model_names = ["simple_cnn"]# , "simple_cnn--linvar"]
 
 def cv_experiment(data, model_name, col_test_data, epochs=100, batch_size=8, nfolds=2, nrepetitions=1):
     """
@@ -399,6 +400,52 @@ def analyze_trained_models():
                 visualize_filter(data, model_name, model, col_test_data, music_sample, speech_sample)
 
 
+def important_channels():
+    MUSIC = 1
+    SPEECH = 0
+
+    results = pd.DataFrame(columns=["model", "channel", "preprocesssing", "effect_acc", "effect_kldiv"])
+    row_id = 0 # counter for where to store the results
+
+    for data_name, kwargs in data_path.items():
+
+        if data_name == "columbia-test": continue  # don't use the test set for training
+        for Preprocessor in [RhythmData, MIRData]:
+            prepr_name = Preprocessor.__name__
+            data = Preprocessor(**kwargs)
+
+            col_test_data = Preprocessor(**data_path["columbia-test"])
+
+            music_sample = random.choice(col_test_data.X[col_test_data.Y == MUSIC])
+            speech_sample = random.choice(col_test_data.X[col_test_data.Y != MUSIC])
+
+            print("Col test data \nX: {}, Y: {}".format(col_test_data.X.shape, col_test_data.Y.shape))
+
+            for model_name in model_names:
+                print("\n\n-------\nImportant channels {} on {} - {}".format(model_name, data_name, prepr_name))
+
+                model = get_trained_model(data, model_name)
+
+                def acc(p):
+                    return np.mean((p>0.5)==(data.Y>0.5))
+
+                y = model.predict(data.X)
+
+                for channel in range(data.X.shape[-1]):
+                    X_ = np.array(data.X)
+                    X_[:,:,:,channel] = 0
+                    p = model.predict(X_)
+                    values = [model_name, channel, prepr_name, acc(p), log_loss(y, p)]
+                    results[row_id] = values
+                    row_id += 1
+
+    results.to_csv("results/effect_of_channels.csv", index=False)
+    print('...saved results')
+
+
+
+
+
 
 def run_on_all(experiment):
     cols = ['data_name','prepr_name','model_name', 'param_c', 'param_gamma', 'param_linvar', 'test_acc', 'test_f1', 'test_acc_pc', 'test_acc_nc', 'cv_acc', 'cv_f1', 'cv_acc_pc', 'cv_acc_nc']
@@ -406,7 +453,7 @@ def run_on_all(experiment):
     for data_name, kwargs in data_path.items():
 
         if data_name == "columbia-test": continue # don't use the test set for training
-        for Preprocessor in [RhythmData]:#[RhythmData, MIRData, SpectroData]:
+        for Preprocessor in [RhythmData, MIRData, SpectroData]:
             prepr_name = Preprocessor.__name__
             data = Preprocessor(**kwargs)
 
@@ -447,33 +494,98 @@ def run_on_all(experiment):
 
 
 if __name__ == "__main__":
-    visualize_channel_activation()
-    #analyze_trained_models()
-    exit()
+    cmd = sys.argv[1]
 
-    if not os.path.exists('results'):
-        os.mkdir('results')
-    save_file_name = 'results/{}_results.csv'.format(RUN_NAME)
-   
+    open_csv = None
+    if cmd == "cv":
+        add_svm_grid()
+        if not os.path.exists('results'):
+            os.mkdir('results')
+        save_file_name = 'results/{}.csv'.format(RUN_NAME)
 
-    if True or not os.path.exists(save_file_name):
-        print('no save file found... calc it')
         results = run_on_all(cv_experiment)
+        results["is_normalized"] = 1 if NORMALIZE_CHANNELS else 0
         results.to_csv(save_file_name, index=False)
-        print('...saved results')
-    else:
+
+        open_csv = save_file_name
+
+    if cmd == "merge_csv":
+        all = []
+        for file in os.listdir("results"):
+            try:
+                add = pd.read_csv(join("results", file))
+                all.append(add)
+            except Exception as e:
+                print("Skipped {} bc {} ({})".format(file, e, type(e)))
+        merged = pd.concat(all)
+        merged.to_csv("results/merged.csv", index=False)
+        open_csv = "results/merged.csv"
+
+
+    if cmd == "open-csv":
+        open_csv = sys.argv[2]
+
+    if open_csv:
+        save_file_name = open_csv
         results = pd.read_csv(save_file_name)
+
+        results = results.dropna(subset=["cv_acc"])
+
+        #results = results.drop(
+        #    results.loc[results.cv_acc].index
+        #)
+
+        models = results["model_name"].unique()
+        datasets = results["data_name"].unique()
+        preprocessing = results["prepr_name"].unique()
+
+        print("Evaluation of: \n  models: {}\n  datasets: {}\n  prepr: {}\n".format(models, datasets, preprocessing))
+
         print('...loaded results from file')
 
-    print('\n -------- ') 
-    print('|RESULTS:|')
-    print(' -------- ') 
+        print('\n -------- ')
+        print('|RESULTS:|')
+        print(' -------- ')
 
-    best_overall_run = results.iloc[results[["cv_acc"]].idxmax()]
-    print(best_overall_run)
-    best_run_per_dataset = results.groupby("data_name")["cv_acc"].idxmax()# .apply(np.argmax)
-    best_run_per_model = results.groupby("model_name")["cv_acc"].idxmax()# .apply(np.argmax)
-    print('Best model: {}'.format(best_overall_run["model_name"]))
-    print('(On {})'.format(best_overall_run["prepr_name"]))
-    print('Model Selection Accuracy: {}'.format(best_overall_run["cv_acc"]))
-    print(results)
+        best_overall_run = results.iloc[results[["cv_acc"]].idxmax()]
+        print("highest cv_accuracy:",  best_overall_run)
+
+
+        print("Best run per dataset:")
+        best_run_per_dataset = results.groupby("data_name")["cv_acc"].idxmax()  # .apply(np.argmax)
+        for row in best_run_per_dataset:
+            v = results.iloc[row]
+            print("{}: {} on {} with {} ({})".format(v["data_name"], v["model_name"], v["prepr_name"], v["cv_acc"], "normalized" if v["is_normalized"]==1 else "unnorm."))
+            print(v)
+            print("\n")
+
+        best_run_per_model = results.groupby("model_name")["cv_acc"].idxmax()  # .apply(np.argmax)
+        print('Best model: {}'.format(best_overall_run["model_name"]))
+        print('(On {})'.format(best_overall_run["prepr_name"]))
+        print('Model Selection Accuracy: {}'.format(best_overall_run["cv_acc"]))
+        #print(results)
+    elif cmd == "analyze_trained":
+        analyze_trained_models()
+    elif cmd == "important_channels":
+        important_channels()
+    elif cmd == "channel_activation":
+        visualize_channel_activation()
+    elif cmd == "is_normalized":
+        file = sys.argv[2]
+        value = sys.argv[3]
+        results = pd.read_csv(file)
+        results["is_normalized"] = value
+        results.to_csv(file, index=False)
+
+    else:
+        print("""Usage: python {} <cmd>
+           with cmd: cv - runs cv for all models/datasets/preprs
+                     merge_csv - concates all csvs in results
+                     open_csv <path> opens a csv and shows the best row per dataset
+                     analyze_trained - plots filters and stuff
+                     important_channels - checks the effect of setting a channel to 0 for different models/datasets
+                     channel_activation - plots the activation of channels for MIR and Spectro data
+                     is_normalized <path to csv> <value> - set the new column 'is_normalized' is <value>, to specify if the file was generated with normalized channels
+        """.format(sys.argv[0]))
+        print("Unknown cmd: "+cmd)
+
