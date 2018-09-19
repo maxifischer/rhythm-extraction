@@ -360,8 +360,8 @@ def visualize_channel_activation():
             music_sample = random.choice(music)
             speech_sample = random.choice(speech)
 
-            plot_channel_activation(music_sample, speech_sample, "../results/{}".format(prepr_name))
-            plot_channel_activations(music, speech, "../results/{}".format(prepr_name))
+            #plot_channel_activation(music_sample, speech_sample, "../results/{}".format(prepr_name))
+            #plot_channel_activations(music, speech, "../results/{}".format(prepr_name))
             plot_channel_activations_mv(music, speech, "../results/{}".format(prepr_name))
 
 

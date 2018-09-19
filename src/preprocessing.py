@@ -17,6 +17,8 @@ from madmom.audio.cepstrogram import MFCC
 
 from librosa.feature import spectral_centroid, spectral_bandwidth, spectral_contrast, spectral_flatness, spectral_rolloff, mfcc, rmse, zero_crossing_rate
 
+import pdb
+
 na = np.newaxis
 
 def crop_image_patches(X, h, w, hstride=1, wstride=1, return_2d_patches=False):
@@ -298,6 +300,10 @@ def load_rhythm_feature_db(music_dir, speech_dir, num_samples=-1, reload=False):
 
     return X, y
 
+def normalize_channels(X):
+    # divide each channel by its std dev
+    X /= np.std(X, axis=(0,1,2))[na,na,na,...] # hehe
+    return X
 
 
 class RhythmData():
@@ -310,6 +316,9 @@ class RhythmData():
         # X is in (N,L,D) format
 
         X = X[:,na,:,:] # dont conv over the number of models
+
+        X = normalize_channels(X)
+
         self.X, self.Y = X, Y 
 
         self.num_frequencies = X.shape[1]
@@ -328,6 +337,8 @@ class SpectroData():
                            window=np.hanning, fps=100, num_bands=3, fmin=30, fmax=17000,
                            fft_sizes=[1024, 2048, 4096]
                           )
+
+        X = normalize_channels(X)
 
         Y = (Y + 1) / 2 
         self.X, self.Y = X, Y
@@ -398,6 +409,7 @@ class MIRData():
         # 24 bands for superflux https://madmom.readthedocs.io/en/latest/modules/features/onsets.html?highlight=spectral_flux#madmom.features.onsets.superflux
 
         X, Y = get_dataset(music_dir, speech_dir, process_dir=get_dir_mir, file_suffix="_mir", num_samples=max_samples, hpool=0, wpool=0)
+        X = normalize_channels(X)
 
         Y = (Y + 1) / 2 
         self.X, self.Y = X, Y
