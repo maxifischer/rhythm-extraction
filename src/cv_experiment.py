@@ -157,9 +157,9 @@ def evaluate_on_test_set(model, model_name, col_test_data, return_conf_matrix=Fa
 The following stuff happens for trained models
 """
 def get_trained_model(data, model_name, epochs=100, batch_size=8):
-    input_shape = data.X.shape[1:]
+    input_shape = list(data.X.shape[1:])
     model = get_model(model_name, input_shape)
-    result_dir = "results/{}--{}".format(data.__class__.__name__, model_name)
+    result_dir = "../results/{}--{}".format(data.__class__.__name__, model_name)
     os.makedirs(result_dir, exist_ok=True)
     weight_path = join(result_dir, "weights.h5")
 
@@ -181,32 +181,34 @@ def get_trained_model(data, model_name, epochs=100, batch_size=8):
 
 def get_accuracy(data, model_name, model, col_test_data):
     r = cv_experiment(data, model_name, col_test_data)
-    result_dir = "results/{}--{}".format(data.__class__.__name__, model_name)
+    result_dir = "../results/{}--{}".format(data.__class__.__name__, model_name)
     with open(join(result_dir, "accuracy.txt"), "w") as f:
         f.write("Test Accuracy: {}\nTest f1 Score: {}\nCV Accuracy: {}\nCV f1 score {}".format(
             r[0][0], r[0][1], r[1][0], r[1][1]))
 
 
 def important_channels(data, model_name, model, col_test_data):
-    result_dir = "results/{}--{}".format(data.__class__.__name__, model_name)
+    result_dir = "../results/{}--{}".format(data.__class__.__name__, model_name)
     # TODO
     pass
 
 def visualize_prediction_over_time(data, model_name, model, music_sample, speech_sample):
-    result_dir = "results/{}--{}".format(data.__class__.__name__, model_name)
+    result_dir = "../results/{}--{}".format(data.__class__.__name__, model_name)
     # plot for some samples the prediction over time, and also for a transition of music to speech
     # including correlation
     visualize.prediction_over_time(music_sample, speech_sample, model, result_dir)
 
 def analyze_error(data, model_name, model, col_test_data):
-    result_dir = "results/{}--{}".format(data.__class__.__name__, model_name)
+    result_dir = "../results/{}--{}".format(data.__class__.__name__, model_name)
     # check false positives/false negatives
     # plot the expected probability of false positives/false negatives under the iid assumption for different timesteps
     # TODO
     pass
 
 def visualize_filter(data, model_name, model, col_test_data, music_sample, speech_sample):
-    result_dir = "results/{}--{}".format(data.__class__.__name__, model_name)
+    music_sample = music_sample[None, ...]
+    speech_sample = speech_sample[None, ...]
+    result_dir = "../results/{}--{}".format(data.__class__.__name__, model_name)
     if data.__class__ != SpectroData or isinstance(model, (PatchSVM, MeanSVM)): return
 
     W_all, i = None, -1
@@ -280,13 +282,20 @@ def analyze_trained_models():
 
             col_test_data = Preprocessor(**data_path["columbia-test"])
 
+            print("Col test data \nX: {}, Y: {}".format(col_test_data.X.shape, col_test_data.Y.shape))
+
+
             for model_name in model_names:
-                print("\n\n-------\nAnalyze {} on {}".format(model_name, data_name))
-                music_sample    = col_test_data.X[col_test_data.Y == MUSIC][0][None, ...]
-                speech_sample   = col_test_data.X[col_test_data.Y != MUSIC][0][None, ...]
+                print("\n\n-------\nAnalyze {} on {} - {}".format(model_name, data_name, prepr_name))
+                music_sample    = col_test_data.X[col_test_data.Y == MUSIC][0]
+                speech_sample   = col_test_data.X[col_test_data.Y != MUSIC][0]
+
+                print("music sample: ", music_sample.shape)
+
+
 
                 model = get_trained_model(data, model_name)
-                get_accuracy(data, model_name, model, col_test_data)
+                #get_accuracy(data, model_name, model, col_test_data)
                 visualize_prediction_over_time(data, model_name, model, music_sample, speech_sample)
                 analyze_error(data, model_name, model, col_test_data)
                 important_channels(data, model_name, model, col_test_data)
@@ -341,8 +350,8 @@ def run_on_all(experiment):
 
 
 if __name__ == "__main__":
-    # analyze_trained_models()
-    # exit()
+    analyze_trained_models()
+    exit()
 
     if not os.path.exists('results'):
         os.mkdir('results')

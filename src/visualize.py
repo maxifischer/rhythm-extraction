@@ -49,22 +49,30 @@ def linear_transition(music, speech, start, end, model, result_dir=None):
 
     plt.legend()
 
-    if result is None:
+    if result_dir is None:
         plt.show()
     else:
-        plt.savefig(result_dir + "/score_over_time_transition.png".format(name))
+        plt.savefig(result_dir + "/score_over_time_transition.png")
 
     plt.clf()
 
 
 def prediction_over_time(music, speech, model, result_dir=None):
+    original_len = music.shape[1]
+    target_len = model.input_shape[2]
+    if original_len < target_len:
+        m, s = np.zeros(model.input_shape[1:]), np.zeros(model.input_shape[1:])
+        m[:,:original_len] = music
+        m[:,original_len:] = music
+        s[:,:original_len] = speech
+        s[:,original_len:] = speech
+        music, speech = m, s
     """
     Plots for some audio files the prediction over time
     Also plots the prediction over time for mixed signals 
     """
     model = Model(inputs=model.input,
                   outputs=model.layers[-2].output)
-    pdb.set_trace()
     Y_p = model.predict(np.array([music, speech]))[:,0,:,0]
     print("Y_p", Y_p.shape)
 
@@ -73,7 +81,7 @@ def prediction_over_time(music, speech, model, result_dir=None):
         plt.plot(list(range(len(y_time))), y_time)
         plt.plot(list(range(len(y_time))), [np.mean(y_time)]*len(y_time), "--")
         plt.title(name)
-        if result is None:
+        if result_dir is None:
             plt.show()
         else:
             plt.savefig(result_dir+"/score_over_time_{}.png".format(name))
@@ -84,4 +92,4 @@ def prediction_over_time(music, speech, model, result_dir=None):
     music = music[:,:timeframes]
     speech = speech[:,:timeframes]
 
-    linear_transition(music, speech, timeframes*0.2, timeframes*0.8, model)
+    linear_transition(music, speech, timeframes*0.2, timeframes*0.8, model, result_dir)

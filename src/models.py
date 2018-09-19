@@ -137,6 +137,7 @@ class MeanSVM():
         return np.mean(y_pred == Y), f1_score(Y, y_pred), p_ac, n_acc
 
 def get_model(modelname, input_shape):
+    print("get model: input shape", input_shape)
 
     num_frequencies = input_shape[0]
 
