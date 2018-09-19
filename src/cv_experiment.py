@@ -28,6 +28,7 @@ import pandas as pd
 pd.set_option('display.max_columns', 15)
 
 import pdb
+import random
 
 MUSIC = 1
 SPEECH = 0
@@ -206,6 +207,15 @@ def analyze_error(data, model_name, model, col_test_data):
     pass
 
 def visualize_filter(data, model_name, model, col_test_data, music_sample, speech_sample):
+    original_len = music_sample.shape[1]
+    target_len = model.input_shape[2]
+    if original_len < target_len:
+        m, s = np.zeros(model.input_shape[1:]), np.zeros(model.input_shape[1:])
+        m[:, :original_len] = music_sample
+        m[:, original_len:] = music_sample
+        s[:, :original_len] = speech_sample
+        s[:, original_len:] = speech_sample
+        music_sample, speech_sample = m, s
     music_sample = music_sample[None, ...]
     speech_sample = speech_sample[None, ...]
     result_dir = "../results/{}--{}".format(data.__class__.__name__, model_name)
@@ -248,13 +258,14 @@ def visualize_filter(data, model_name, model, col_test_data, music_sample, speec
             plt.subplot(num_filters + 1, 3, 2 + channel * 3)
             plt.imshow(w_plus, cmap="PuOr", norm=norm)
             plt.colorbar()
-            if MODEL == "LINEAR":
+
+            if model_name == 'linear':
                 plt.title("Evidence for music")
 
             plt.subplot(num_filters + 1, 3, 3 + channel * 3)
             plt.imshow(w_minus, cmap="PuOr", norm=norm)
             plt.colorbar()
-            if MODEL == "LINEAR":
+            if model_name == 'linear':
                 plt.title("Evidence for speech")
 
         plt.subplot(num_filters + 1, 1, num_filters + 1)
@@ -265,8 +276,7 @@ def visualize_filter(data, model_name, model, col_test_data, music_sample, speec
         plt.legend()
 
         plt.tight_layout()
-        plt.savefig("{}/filter.png".format(result_dir))
-        plt.show()
+        plt.savefig("{}/filter-channel-{}.png".format(result_dir, output_channel))
 
 
 def analyze_trained_models():
@@ -276,7 +286,7 @@ def analyze_trained_models():
     for data_name, kwargs in data_path.items():
 
         if data_name == "columbia-test": continue  # don't use the test set for training
-        for Preprocessor in [RhythmData, MIRData, SpectroData]:
+        for Preprocessor in [SpectroData]: #[RhythmData, MIRData, SpectroData]:
             prepr_name = Preprocessor.__name__
             data = Preprocessor(**kwargs)
 
@@ -287,8 +297,8 @@ def analyze_trained_models():
 
             for model_name in model_names:
                 print("\n\n-------\nAnalyze {} on {} - {}".format(model_name, data_name, prepr_name))
-                music_sample    = col_test_data.X[col_test_data.Y == MUSIC][0]
-                speech_sample   = col_test_data.X[col_test_data.Y != MUSIC][0]
+                music_sample    = random.choice(col_test_data.X[col_test_data.Y == MUSIC])
+                speech_sample   = random.choice(col_test_data.X[col_test_data.Y != MUSIC])
 
                 print("music sample: ", music_sample.shape)
 
