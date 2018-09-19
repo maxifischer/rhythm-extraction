@@ -1,1 +1,18 @@
-madmom
+h5py==2.7.0
+Keras==2.2.0
+Keras-Applications==1.0.2
+Keras-Preprocessing==1.0.1
+librosa==0.6.2
+-e git+https://github.com/CPJKU/madmom.git@f163865521c0c126a7719704aec8b90e6af30e55#egg=madmom
+matplotlib==2.2.2
+numpy==1.14.0
+pandas==0.19.2
+pandoc==1.0.2
+pandocfilters==1.4.1
+pathlib==1.0.1
+pathlib2==2.2.1
+scikit-learn==0.19.1
+scipy==1.0.0
+sklearn-crfsuite==0.3.6
+stft==0.5.2
+tensorflow==1.10.1
