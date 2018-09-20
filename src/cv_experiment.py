@@ -51,7 +51,7 @@ data_path = {
 na = np.newaxis
 
 
-model_names =["simple_cnn--linvar", "simple_cnn", "linear--linvar", "linear", "big_cnn--linvar", "big_cnn", "linear--linvar", "linear", "mean_svm"]
+model_names =["simple_cnn--linvar", "simple_cnn", "linear--linvar", "linear", "big_cnn--linvar", "big_cnn", "big_linear--linvar", "big_linear", "mean_svm"]
 
 # SVM gridsearch values
 def add_svm_grid():
