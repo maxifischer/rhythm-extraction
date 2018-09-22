@@ -529,6 +529,7 @@ if __name__ == "__main__":
         results = pd.read_csv(save_file_name)
 
         results = results.dropna(subset=["cv_acc"])
+        results["param_linvar"].fillna(False, inplace=True)
 
         #results = results.drop(
         #    results.loc[results.cv_acc].index
@@ -610,14 +611,9 @@ if __name__ == "__main__":
 
         print("****************************")
         print("****************************")
-        print("Best preprocessing for each model")
+        print("Best feature set for each model")
         best_setup(["data_name", "model_name", "param_linvar"], "cv_acc", ["prepr_name", "cv_acc"])
 
-
-        print("****************************")
-        print("****************************")
-        print("Best preprocessing for each model")
-        best_setup(["data_name", "model_name", "param_linvar"], "cv_acc", ["prepr_name", "cv_acc"])
 
 
 
