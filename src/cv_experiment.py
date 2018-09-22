@@ -189,11 +189,6 @@ def get_accuracy(data, model_name, model, col_test_data):
             r[0][0], r[0][1], r[1][0], r[1][1]))
 
 
-def important_channels(data, model_name, model, col_test_data):
-    result_dir = "../results/{}--{}".format(data.__class__.__name__, model_name)
-    # TODO
-    pass
-
 def visualize_prediction_over_time(data, model_name, model, music_sample, speech_sample):
     result_dir = "../results/{}--{}".format(data.__class__.__name__, model_name)
     # plot for some samples the prediction over time, and also for a transition of music to speech
@@ -448,7 +443,8 @@ def important_channels():
 
 
 def run_on_all(experiment):
-    cols = ['data_name','prepr_name','model_name', 'param_c', 'param_gamma', 'param_linvar', 'test_acc', 'test_f1', 'test_acc_pc', 'test_acc_nc', 'cv_acc', 'cv_f1', 'cv_acc_pc', 'cv_acc_nc']
+    cols = ['data_name','prepr_name','model_name', 'param_c', 'param_gamma', 'param_linvar', 'test_acc',
+            'test_f1', 'test_acc_pc', 'test_acc_nc', 'cv_acc', 'cv_f1', 'cv_acc_pc', 'cv_acc_nc']
     results = pd.DataFrame(columns=cols)
     for data_name, kwargs in data_path.items():
 
@@ -525,7 +521,7 @@ if __name__ == "__main__":
         open_csv = "results/merged.csv"
 
 
-    if cmd == "open-csv":
+    if cmd == "open_csv":
         open_csv = sys.argv[2]
 
     if open_csv:
@@ -553,19 +549,81 @@ if __name__ == "__main__":
         best_overall_run = results.iloc[results[["cv_acc"]].idxmax()]
         print("highest cv_accuracy:",  best_overall_run)
 
-
-        print("Best run per dataset:")
+        print("\n===============================")
+        print("Best run per dataset cv_acc:")
         best_run_per_dataset = results.groupby("data_name")["cv_acc"].idxmax()  # .apply(np.argmax)
         for row in best_run_per_dataset:
             v = results.iloc[row]
-            print("{}: {} on {} with {} ({})".format(v["data_name"], v["model_name"], v["prepr_name"], v["cv_acc"], "normalized" if v["is_normalized"]==1 else "unnorm."))
+            print("{}: {} on {} with {} ({}, {})".format(v["data_name"], v["model_name"], v["prepr_name"], v["cv_acc"],
+                                                     "normalized" if v["is_normalized"] == 1 else "unnorm.",
+                                                     "linvar" if v["param_linvar"] else "mean"   ))
             print(v)
             print("\n")
 
-        best_run_per_model = results.groupby("model_name")["cv_acc"].idxmax()  # .apply(np.argmax)
-        print('Best model: {}'.format(best_overall_run["model_name"]))
-        print('(On {})'.format(best_overall_run["prepr_name"]))
-        print('Model Selection Accuracy: {}'.format(best_overall_run["cv_acc"]))
+        print("\n\n===============================")
+
+        print("Best run per dataset test_acc:")
+        best_run_per_dataset = results.groupby("data_name")["test_acc"].idxmax()  # .apply(np.argmax)
+        for row in best_run_per_dataset:
+            v = results.iloc[row]
+            print("{}: {} on {} with {} ({}, {})".format(v["data_name"], v["model_name"], v["prepr_name"], v["test_acc"],
+                                                     "normalized" if v["is_normalized"] == 1 else "unnorm.",
+                                                     "linvar" if v["param_linvar"] else "mean"   ))
+            print(v)
+            print("\n")
+
+        def best_setup_latex(group_by, metric_name, result_cols):
+            print("==========================")
+            best_runs = results.group_by(group_by)[metric_name].idxmax()
+            print("& ".join(group_by+result_cols), "\\")
+            for row in best_runs:
+                print("& ".join([row[v] for v in group_by]), "\\")
+            print("==========================")
+
+        def best_setup(group_by, metric_name, result_cols):
+            print("==========================")
+            best_runs = results.groupby(group_by)[metric_name].idxmax()
+            for idx in best_runs:
+                row = results.iloc[idx]
+                print(row[group_by])
+                print("->")
+                print(row[result_cols])
+                print("----")
+            print("==========================")
+
+        """
+        #Best model for each preprocessing type
+        metric = "cv_acc"
+        best_runs = results.groupby(["data_name", "prepr_name"])[metric].idxmax()
+        for idx in best_runs:
+            row = results.iloc[idx]
+            print(row[["data_name", "prepr_name"]])
+            print(row[["model_name", "param_linvar", "cv_acc"]])
+            print("----")
+        """
+        print("****************************")
+        print("****************************")
+        print("Best model per feature set")
+        best_setup(["data_name", "prepr_name"], "cv_acc", ["model_name", "param_linvar", "cv_acc"])
+
+
+
+        print("****************************")
+        print("****************************")
+        print("Best preprocessing for each model")
+        best_setup(["data_name", "model_name", "param_linvar"], "cv_acc", ["prepr_name", "cv_acc"])
+
+
+        print("****************************")
+        print("****************************")
+        print("Best preprocessing for each model")
+        best_setup(["data_name", "model_name", "param_linvar"], "cv_acc", ["prepr_name", "cv_acc"])
+
+
+
+
+
+
         #print(results)
     elif cmd == "analyze_trained":
         analyze_trained_models()
