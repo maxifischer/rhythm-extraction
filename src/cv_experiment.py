@@ -589,7 +589,7 @@ if __name__ == "__main__":
                 print(row[group_by])
                 print("->")
                 print(row[result_cols])
-                print("----")
+                print("----\n")
             print("==========================")
 
         """
@@ -613,6 +613,35 @@ if __name__ == "__main__":
         print("****************************")
         print("Best feature set for each model")
         best_setup(["data_name", "model_name", "param_linvar"], "cv_acc", ["prepr_name", "cv_acc"])
+
+
+        print("****************************")
+        print("****************************")
+        print("Linear seperability for each preprocessing")
+        rows = results.loc[(results.model_name=="linear") & (results.param_linvar==False)].index
+        for idx in rows:
+            row = results.iloc[idx]
+            print(row[["data_name", "prepr_name", "cv_acc", "test_acc"]])
+            print("--------")
+
+
+
+        print("****************************")
+        print("****************************")
+        print("Benefit of using linvar for each preprocessing and model")
+        best_linvar = results.loc[(results.param_linvar==True) & (results.is_normalized==True)].groupby(["data_name", "prepr_name", "model_name"])["cv_acc"].idxmax()
+        for idx in best_linvar:
+            row = results.iloc[idx]
+            cmp = results.loc[(results.param_linvar==False) &
+                                  (results.data_name == row["data_name"]) &
+                                  (results.model_name == row["model_name"]) &
+                                  (results.prepr_name == row["prepr_name"])
+                                ].iloc[0]
+            print(row[["data_name", "prepr_name", "model_name"]])
+            print("cv_acc benefit: ", row["cv_acc"]-cmp["cv_acc"])
+            print("test_acc benefit: ", row["test_acc"]-cmp["test_acc"])
+            print("--------")
+
 
 
 
