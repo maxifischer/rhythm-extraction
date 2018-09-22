@@ -33,7 +33,7 @@ import random
 MUSIC = 1
 SPEECH = 0
 
-RUN_NAME='cluster_cv'
+RUN_NAME='all-small-models'
 
 data_path = {
                 "GTZAN": {
@@ -53,7 +53,7 @@ data_path = {
 na = np.newaxis
 
 
-model_names =["simple_cnn--linvar", "simple_cnn", "linear--linvar", "linear", "mean_svm"]
+model_names =["simple_cnn--linvar", "simple_cnn", "linear--linvar", "linear"]
 
 # SVM gridsearch values
 def add_svm_grid():
@@ -70,7 +70,7 @@ def add_svm_grid():
 
 
 
-def cv_experiment(data, model_name, col_test_data, epochs=100, batch_size=8, nfolds=2, nrepetitions=1):
+def cv_experiment(data, model_name, col_test_data, epochs=100, batch_size=8, nfolds=5, nrepetitions=1):
     """
 
     :return: ((test accuracy on columbia test data set, f1 score on col test, test acc on colubia test positive class only, test acc on columbia test negative class only), (cv acc on train data, cv f1 score on train data, cv acc on train data pos class only, cv acc on train data neg class only))
@@ -499,6 +499,7 @@ if __name__ == "__main__":
     open_csv = None
     if cmd == "cv":
         add_svm_grid()
+        print("CV for ", model_names)
         if not os.path.exists('results'):
             os.mkdir('results')
         save_file_name = 'results/{}.csv'.format(RUN_NAME)

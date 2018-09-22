@@ -250,7 +250,7 @@ def get_model(modelname, input_shape):
         return TimestampAggregator(lambda: get_model(modelname.split('--linvar')[0], input_shape))
     
     else:
-        print('modelname unknown')
+        print('modelname unknown', modelname)
         return None
 
 def reshape_keras_conv_input(modelname, input_shape, weights):
