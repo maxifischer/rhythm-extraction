@@ -57,7 +57,7 @@ data_path = {
 na = np.newaxis
 
 
-model_names = ["mv_linear"]
+model_names = ["mv_linear", "linear", "simple_cnn"]
 def add_mv_grid():
 
     # hidden_neurons=[100], dropout=0
@@ -445,15 +445,21 @@ def important_channels():
                 def acc(p):
                     return np.mean((p>0.5)==(data.Y>0.5))
 
+                def kl_div(y, p):
+                    y_, p_ = 1-y, 1-p
+                    return np.sum( y*np.log(y/p) ) + np.sum( y_*np.log(y_/p_) )
+
                 y = model.predict(data.X)
 
                 for channel in range(data.X.shape[-1]):
                     X_ = np.array(data.X)
                     X_[:,:,:,channel] = 0
                     p = model.predict(X_)
-                    values = [model_name, channel, prepr_name, acc(p), log_loss(y, p)]
+
+                    values = [model_name, channel, prepr_name, 1-np.mean((p>0.5)==(y>0.5)), kl_div(y, p)]
                     results[row_id] = values
                     row_id += 1
+                    print(values)
 
     results.to_csv("results/effect_of_channels.csv", index=False)
     print('...saved results')
