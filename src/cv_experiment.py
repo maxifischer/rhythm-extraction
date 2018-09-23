@@ -25,15 +25,19 @@ import matplotlib
 
 import pickle
 import pandas as pd
+from itertools import product
+
 pd.set_option('display.max_columns', 15)
 
 import pdb
 import random
 
+import json
+
 MUSIC = 1
 SPEECH = 0
 
-RUN_NAME='all-small-models'
+RUN_NAME='mv-models'
 
 data_path = {
                 "GTZAN": {
@@ -53,7 +57,23 @@ data_path = {
 na = np.newaxis
 
 
-model_names =["simple_cnn--linvar", "simple_cnn", "linear--linvar", "linear"]
+model_names = ["mv_linear"]
+def add_mv_grid():
+
+    # hidden_neurons=[100], dropout=0
+    for num_neurons, num_layers, dropout in product([50, 100, 200], [1, 2, 3], [0., 0.25, 0.5]):
+        model_names.append("mv_nn--{}".format(json.dumps(
+            {"hidden_neurons": [num_neurons]*num_layers,
+             "dropout": dropout})))
+
+    C_values = np.linspace(1, 100, 20)  # [96.]  #np.linspace(1., 100, 2)
+    gamma_values = np.logspace(-10, 0, 30)  # [1e-6] #np.logspace(-10, 0, 2)
+    for c, gamma in product(C_values, gamma_values):
+        model_names.append("mv_svm--{}".format(json.dumps({"C": c, "gamma": gamma})))
+
+
+
+
 
 # SVM gridsearch values
 def add_svm_grid():
@@ -102,6 +122,7 @@ def cv_experiment(data, model_name, col_test_data, epochs=100, batch_size=8, nfo
         result = (test_acc[1:], cvacc[1:])
     else:
         result = test_acc, cvacc
+    print(">>>>>>>>", model_name, cvacc[0])
     return result
 
 
@@ -444,12 +465,12 @@ def important_channels():
 
 def run_on_all(experiment):
     cols = ['data_name','prepr_name','model_name', 'param_c', 'param_gamma', 'param_linvar', 'test_acc',
-            'test_f1', 'test_acc_pc', 'test_acc_nc', 'cv_acc', 'cv_f1', 'cv_acc_pc', 'cv_acc_nc']
+            'test_f1', 'test_acc_pc', 'test_acc_nc', 'cv_acc', 'cv_f1', 'cv_acc_pc', 'cv_acc_nc', 'hyper_params']
     results = pd.DataFrame(columns=cols)
     for data_name, kwargs in data_path.items():
 
         if data_name == "columbia-test": continue # don't use the test set for training
-        for Preprocessor in [RhythmData, MIRData, SpectroData]:
+        for Preprocessor in [RhythmData, MIRData]: #, SpectroData]:
             prepr_name = Preprocessor.__name__
             data = Preprocessor(**kwargs)
 
@@ -461,18 +482,27 @@ def run_on_all(experiment):
                 split_model = model_name.split('--')
                 print('finished cv, result:')
                 print(result)
-                
+
+                hyper_params = ""
+
                 if split_model[-1] == 'linvar':
                     param_linvar = True
                 else:
                     param_linvar = None
-                if len(split_model) > 2:
-                    param_c, param_gamma = split_model[1:3]
-                else:
-                    param_c, param_gamma = (None, None)
+
+                if split_model[0].startswith("mv"):
+                    try:
+                        hyper_params = split_model[1]
+                    except: pass
+
+                param_c, param_gamma = (None, None)
+                if model_name.startswith("mean"):
+                    if len(split_model) > 2:
+                        param_c, param_gamma = split_model[1:3]
+
 
                 model_name = split_model[0]
-                df_vals = [data_name, prepr_name, model_name, param_c, param_gamma, param_linvar]
+                df_vals = [data_name, prepr_name, model_name, param_c, param_gamma, param_linvar, hyper_params]
                 flattened = [val for sublist in result for val in sublist]
                 df_vals.extend(flattened[0:8])
                 results = results.append(pd.DataFrame(dict(zip(cols, df_vals)), index=[0]), ignore_index=True)
@@ -494,7 +524,8 @@ if __name__ == "__main__":
 
     open_csv = None
     if cmd == "cv":
-        add_svm_grid()
+        #add_svm_grid()
+        add_mv_grid()
         print("CV for ", model_names)
         if not os.path.exists('results'):
             os.mkdir('results')
@@ -513,6 +544,8 @@ if __name__ == "__main__":
         for file in os.listdir("results"):
             try:
                 add = pd.read_csv(join("results", file))
+                if not "hyper_params" in add:
+                    add["hyper_params"].fillna("")
                 all.append(add)
             except Exception as e:
                 print("Skipped {} bc {} ({})".format(file, e, type(e)))

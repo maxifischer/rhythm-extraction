@@ -5,13 +5,17 @@ from preprocessing import patch_augment
 
 import keras
 from keras.models import Sequential
-from keras.layers import Dense, Dropout, Flatten, Lambda
+from keras.layers import Dense, Dropout, Flatten, Lambda, Activation, Reshape
 from keras.layers import Conv2D, MaxPooling2D
 from keras import backend as K
 from keras.models import Model
 
 from sklearn.metrics import log_loss, f1_score, confusion_matrix
 from sklearn.svm import SVC
+
+
+import json
+import pdb
 
 FILTER_SIZE = "small"
 
@@ -140,7 +144,79 @@ class MeanSVM():
         p_acc, n_acc = class_accs(Y, y_pred) 
         return np.mean(y_pred == Y), f1_score(Y, y_pred), p_acc, n_acc
 
-def get_model(modelname, input_shape):
+
+class MeanVarClassifier():
+    def __init__(self, model):
+        """
+        :param model: sklearn / keras model that has a .fit(X, Y) and .predict(X)
+        """
+
+        self.model = model
+
+    def mean_time_axis(self, X):
+        N,H,W,D = X.shape
+        # mean input data over the time axis (W)
+        X_meaned = np.mean(X, axis=2)
+        X_var = np.var(X, axis=2)
+        return np.concatenate((X_meaned, X_var), axis=-1).reshape((N, -1))
+
+
+    def fit(self, X, Y, **kwargs):
+        print('input shape: {}'.format(X.shape))
+
+        X_meaned = self.mean_time_axis(X)
+        print('meaned shape: {}'.format(X_meaned.shape))
+        self.model.fit(X_meaned, Y, **kwargs)
+        # print train error
+        print('...finished fitting')
+        print('...training acc: {}'.format(self.evaluate(X, Y))[0])
+
+    def predict(self, X, **kwargs):
+        X_meaned = self.mean_time_axis(X)
+        return np.squeeze(self.model.predict(X_meaned))
+
+    def evaluate(self, X, Y, **kwargs):
+        y_pred = np.where(self.predict(X) > 0.5, 1, 0)
+        p_acc, n_acc = class_accs(Y, y_pred)
+        return np.mean(y_pred == Y), f1_score(Y, y_pred), p_acc, n_acc
+
+
+class MeanVarSVM(MeanVarClassifier):
+    def __init__(self, **kwargs):
+        model = SVC(**kwargs)
+        super().__init__(model)
+        self._kwargs = kwargs
+
+    def fit(self, X, Y, **kwargs):
+        return super().fit(X, Y)
+
+
+class MeanVarNN(MeanVarClassifier):
+    def __init__(self, input_dims, hidden_neurons=[100], dropout=0):
+        model = Sequential()
+        model.add(Dense(hidden_neurons[0], input_dim=input_dims, activation='relu'))
+        model.add(Dropout(dropout))
+        for neurons in hidden_neurons[1:]:
+            model.add(Dense(neurons, activation='relu'))
+            model.add(Dropout(dropout))
+        model.add(Dense(1, activation='sigmoid'))
+        #model.add(Reshape((-1, )))
+        model.compile(loss=keras.losses.binary_crossentropy,
+                      optimizer=keras.optimizers.Adadelta(),
+                      metrics=['accuracy', f1, pc_class_accs, nc_class_accs])
+        super().__init__(model)
+        self._kwargs = {"input_dims": input_dims, "hidden_neurons": hidden_neurons, "dropout": dropout}
+
+
+
+class LinearNonConv():
+    def fit(self, X, Y):
+        self.W = np.linalg.lstsq(X, Y)
+
+    def predict(self, X, Y):
+        return np.where(X.dot(self.W) > 0.5, 1, 0)
+
+def get_model(modelname, input_shape, kwargs={}):
     print("get model: input shape", input_shape)
 
     num_frequencies = input_shape[0]
@@ -168,6 +244,30 @@ def get_model(modelname, input_shape):
 
     elif modelname == 'patchregressor':
         return OLSPatchRegressor()
+
+    elif modelname.startswith('mv_svm'):
+        # C, gamma
+        kwargs = json.loads(modelname.split("--")[1])
+        return MeanVarSVM(**kwargs)
+
+    elif modelname == 'mv_linear':
+        model = Sequential()
+        input_dims = 2 * input_shape[-1]
+        model.add(Dense(1, input_dim=input_dims, activation='sigmoid'))
+        #model.add(Reshape((-1,)))
+        model.compile(loss=keras.losses.binary_crossentropy,
+                      optimizer=keras.optimizers.Adadelta(),
+                      metrics=['accuracy', f1, pc_class_accs, nc_class_accs])
+        return MeanVarClassifier(model)
+
+    elif modelname.startswith('mv_nn'):
+        # input_dims, hidden_neurons=[100], dropout=0
+
+        kwargs = json.loads(modelname.split("--")[1])
+        input_dims = 2*input_shape[-1]
+        return MeanVarNN(input_dims, **kwargs)
+
+
 
     elif modelname == 'simple_cnn':
 
@@ -264,6 +364,14 @@ def reset_weights(model):
         return PatchSVM(**model._kwargs)
     elif isinstance(model, MeanSVM):
         return MeanSVM(**model._kwargs)
+    elif isinstance(model, MeanVarSVM):
+        return MeanVarSVM(**model._kwargs)
+    elif isinstance(model, MeanVarClassifier): # feedforward and linear, both have keras models
+        session = K.get_session()
+        for layer in model.model.layers:
+            if hasattr(layer, 'kernel_initializer'):
+                layer.kernel.initializer.run(session=session)
+        return model
 
     elif isinstance(model, OLSPatchRegressor):
         return OLSPatchRegressor(patch_width=model.patch_width)
@@ -278,7 +386,6 @@ def reset_weights(model):
         for layer in model.layers: 
             if hasattr(layer, 'kernel_initializer'):
                 layer.kernel.initializer.run(session=session)
-
         return model
 
 
