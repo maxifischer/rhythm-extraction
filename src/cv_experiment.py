@@ -57,19 +57,19 @@ data_path = {
 na = np.newaxis
 
 
-model_names = ["mv_linear", "linear", "simple_cnn"]
+model_names = ["mv_linear"] # , "linear", "simple_cnn"]
 def add_mv_grid():
-
-    # hidden_neurons=[100], dropout=0
-    for num_neurons, num_layers, dropout in product([50, 100, 200], [1, 2, 3], [0., 0.25, 0.5]):
-        model_names.append("mv_nn--{}".format(json.dumps(
-            {"hidden_neurons": [num_neurons]*num_layers,
-             "dropout": dropout})))
 
     C_values = np.linspace(1, 100, 20)  # [96.]  #np.linspace(1., 100, 2)
     gamma_values = np.logspace(-10, 0, 30)  # [1e-6] #np.logspace(-10, 0, 2)
     for c, gamma in product(C_values, gamma_values):
         model_names.append("mv_svm--{}".format(json.dumps({"C": c, "gamma": gamma})))
+
+    # hidden_neurons=[100], dropout=0
+    for num_neurons, num_layers, dropout in product([50, 100, 200], [1, 2, 3], [0., 0.25, 0.5]):
+        model_names.append("mv_nn--{}".format(json.dumps(
+            {"hidden_neurons": [num_neurons] * num_layers,
+             "dropout": dropout})))
 
 
 
@@ -89,41 +89,6 @@ def add_svm_grid():
 #model_names.extend(["simple_cnn--linvar", "simple_cnn", "linear--linvar", "linear"])# "linear", "linear--linvar", "simple_cnn", "simple_cnn--linvar"]
 
 
-
-def cv_experiment(data, model_name, col_test_data, epochs=100, batch_size=8, nfolds=5, nrepetitions=1):
-    """
-
-    :return: ((test accuracy on columbia test data set, f1 score on col test, test acc on colubia test positive class only, test acc on columbia test negative class only), (cv acc on train data, cv f1 score on train data, cv acc on train data pos class only, cv acc on train data neg class only))
-    """
-
-    input_shape = data.X.shape[1:]
-    model = get_model(model_name, input_shape)
-
-    def get_fresh_model(model=model):
-        reset_weights(model)
-        return model
-
-    train_model = lambda model, X, Y: model.fit(X, Y,
-                                        batch_size=batch_size,
-                                        epochs=epochs, verbose=0)
-
-    cvacc = cv(data.X, data.Y, get_fresh_model, train_model, nfolds=nfolds, nrepetitions=nrepetitions)
-
-    test_acc = None
-    if col_test_data is not None: 
-        train_model(model, data.X, data.Y)
-
-        test_acc = evaluate_on_test_set(model, model_name, col_test_data)
-
-    print('cvacc output is of length {}'.format(len(cvacc)))  
-
-    K.clear_session()
-    if len(cvacc) == 5:
-        result = (test_acc[1:], cvacc[1:])
-    else:
-        result = test_acc, cvacc
-    print(">>>>>>>>", model_name, cvacc[0])
-    return result
 
 
 def train_test_experiment(data, model_name, col_test_data, epochs=100, batch_size=8):
@@ -468,10 +433,45 @@ def important_channels():
 
 
 
+def cv_experiment(data, model_name, col_test_data, epochs=100, batch_size=8, nfolds=5, nrepetitions=1):
+    """
+
+    :return: ((test accuracy on columbia test data set, f1 score on col test, test acc on colubia test positive class only, test acc on columbia test negative class only), (cv acc on train data, cv f1 score on train data, cv acc on train data pos class only, cv acc on train data neg class only))
+    """
+
+    input_shape = data.X.shape[1:]
+    model = get_model(model_name, input_shape)
+
+    def get_fresh_model(model=model):
+        reset_weights(model)
+        return model
+
+    train_model = lambda model, X, Y: model.fit(X, Y,
+                                        batch_size=batch_size,
+                                        epochs=epochs, verbose=0)
+
+    cvacc = cv(data.X, data.Y, get_fresh_model, train_model, nfolds=nfolds, nrepetitions=nrepetitions)
+
+    test_acc = None
+    if col_test_data is not None:
+        train_model(model, data.X, data.Y)
+
+        test_acc = evaluate_on_test_set(model, model_name, col_test_data)
+
+    print('cvacc output is of length {}'.format(len(cvacc)))
+
+    K.clear_session()
+    if len(cvacc) == 5:
+        result = (test_acc[1:], cvacc[1:])
+    else:
+        result = test_acc, cvacc
+    print(">>>>>>>>", model_name, cvacc[0])
+    return result
+
 
 def run_on_all(experiment):
-    cols = ['data_name','prepr_name','model_name', 'param_c', 'param_gamma', 'param_linvar', 'test_acc',
-            'test_f1', 'test_acc_pc', 'test_acc_nc', 'cv_acc', 'cv_f1', 'cv_acc_pc', 'cv_acc_nc', 'hyper_params']
+    cols = ['data_name','prepr_name','model_name', 'param_c', 'param_gamma', 'param_linvar', 'test_acc', 'test_f1',
+            'test_acc_pc', 'test_acc_nc', 'cv_acc', 'cv_f1', 'cv_acc_pc', 'cv_acc_nc', 'hyper_params', 'is_normalized']
     results = pd.DataFrame(columns=cols)
     for data_name, kwargs in data_path.items():
 
@@ -481,7 +481,7 @@ def run_on_all(experiment):
             data = Preprocessor(**kwargs)
 
             col_test_data = Preprocessor(**data_path["columbia-test"])
-            for model_name in model_names:
+            for model_id, model_name in enumerate(model_names):
                 print("---------------- Experiment for {} on {}({})".format(
                     model_name, Preprocessor.__name__, data_name))
                 result = experiment(data, model_name, col_test_data)
@@ -506,22 +506,23 @@ def run_on_all(experiment):
                     if len(split_model) > 2:
                         param_c, param_gamma = split_model[1:3]
 
+                test_acc, test_f1, test_acc_pc, test_acc_nc = result[0]
+                cv_acc, cv_f1, cv_acc_pc, cv_acc_nc = result[1]
+
 
                 model_name = split_model[0]
-                df_vals = [data_name, prepr_name, model_name, param_c, param_gamma, param_linvar, hyper_params]
-                flattened = [val for sublist in result for val in sublist]
-                df_vals.extend(flattened[0:8])
-                results = results.append(pd.DataFrame(dict(zip(cols, df_vals)), index=[0]), ignore_index=True)
+                vals = pd.DataFrame({'data_name': [data_name],'prepr_name': [prepr_name],'model_name': [split_model[0]], 'param_c': [param_c],
+                       'param_gamma': [param_gamma], 'param_linvar': [param_linvar], 'test_acc': [test_acc],
+                       'test_f1': [test_f1], 'test_acc_pc': [test_acc_pc], 'test_acc_nc': [test_acc_nc],
+                       'cv_acc': [cv_acc], 'cv_f1': [cv_f1], 'cv_acc_pc': [cv_acc_pc], 'cv_acc_nc': [cv_acc_nc],
+                       'hyper_params': [hyper_params], 'is_normalized': [1 if NORMALIZE_CHANNELS else 0]})
+                results = results.append(vals, ignore_index=True)
 
-                #test_acc, test_f1 = result[0][0], result[0][1]
-                #cv_acc, cv_f1 = result[1][0], result[1][1]
 
-                #df_vals = [data_name, prepr_name, model_name, param_c, param_gamma, param_linvar, test_acc, test_f1, cv_acc, cv_f1]
-                #results.loc[results.shape[0]] = df_vals
+                if model_id % 100 == 0:
+                    print(results)
+                    results.to_csv("cv_temp_results.csv", index=False)
 
-                #flattened = [val for sublist in result for val in sublist]
-                #df_vals.extend(flattened[0:4])
-                #results = results.append(pd.DataFrame(dict(zip(cols, df_vals)), index=[0]), ignore_index=True)
     return results
 
 
