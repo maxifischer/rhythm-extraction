@@ -121,7 +121,21 @@ def train_test_experiment(data, model_name, col_test_data, epochs=100, batch_siz
     return result
 
 
+def accuracy_on_test_set(model, model_name, col_test_data):
+    try:
 
+        P = model.predict(col_test_data.X)
+        Y = np.reshape(col_test_data.Y, P.shape)
+        return np.mean((P>0.5)==(Y>0.5))
+    except ValueError:
+        # if the test set has a different time length then the train set, try to reshape the model and test then
+        test_input_shape = col_test_data.X.shape[1:]
+        model_weights = model.get_weights()
+        model = reshape_keras_conv_input(model_name, test_input_shape, model_weights)
+
+        P = model.predict(col_test_data.X)
+        Y = np.reshape(col_test_data.Y, P.shape)
+        return np.mean((P > 0.5) == (Y > 0.5))
 
 def evaluate_on_test_set(model, model_name, col_test_data, return_conf_matrix=False):
     try:
@@ -401,12 +415,13 @@ def important_channels(model_names=model_names):
     MUSIC = 1
     SPEECH = 0
 
-    results = pd.DataFrame(columns=["model", "channel", "preprocesssing", "effect_acc", "effect_kldiv", "test_acc"])
+    results = pd.DataFrame(columns=["data_name", "model", "channel", "preprocesssing", "effect_acc", "effect_kldiv", "test_acc"])
     row_id = 0 # counter for where to store the results
 
     for data_name, kwargs in data_path.items():
 
-        if data_name == "columbia-test": continue  # don't use the test set for training
+        # if data_name == "columbia-test": continue  # don't use the test set for training
+        if not data_name == "GTZAN": continue
         for Preprocessor in [RhythmData, MIRData]:
             prepr_name = Preprocessor.__name__
             data = Preprocessor(**kwargs)
@@ -430,7 +445,7 @@ def important_channels(model_names=model_names):
                     y_, p_ = 1-y, 1-p
                     return np.sum( y*np.log(y/p) ) + np.sum( y_*np.log(y_/p_) )
 
-                test_acc = evaluate_on_test_set(model, model_name, col_test_data)[0]
+                test_acc = accuracy_on_test_set(model, model_name, col_test_data)
                 y = model.predict(data.X)
 
                 for channel in range(data.X.shape[-1]):
@@ -438,8 +453,8 @@ def important_channels(model_names=model_names):
                     X_[:,:,:,channel] = 0
                     p = model.predict(X_)
 
-                    values = [model_name, channel, prepr_name, 1-np.mean((p>0.5)==(y>0.5)), kl_div(y, p), test_acc]
-                    results[row_id] = values
+                    values = [data_name, model_name, channel, prepr_name, 1-np.mean((p>0.5)==(y>0.5)), kl_div(y, p), test_acc]
+                    results.loc[row_id] = values
                     row_id += 1
                     print(values)
 
