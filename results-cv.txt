@@ -1,0 +1,675 @@
+Evaluation of: 
+  models: ['mv_linear' 'mv_svm' 'mv_nn' 'simple_cnn' 'linear' 'meansvm']
+  datasets: ['GTZAN' 'columbia-train']
+  prepr: ['RhythmData' 'MIRData' 'SpectroData']
+
+...loaded results from file
+
+ -------- 
+|RESULTS:|
+ -------- 
+highest cv_accuracy:      cv_acc  cv_acc_nc  cv_acc_pc  cv_f1 data_name  \
+356     1.0        1.0        1.0    1.0     GTZAN   
+
+                                          hyper_params  is_normalized  \
+356  {"C": 58.315789473684205, "gamma": 0.041753189...              1   
+
+      ...    param_gamma  param_linvar  prepr_name test_acc test_acc_nc  \
+356   ...            NaN         False  RhythmData    0.975        0.95   
+
+     test_acc_pc  test_f1  
+356          1.0  0.97561  
+
+[1 rows x 16 columns]
+
+===============================
+Best run per dataset cv_acc:
+GTZAN: mv_svm on RhythmData with 1.0 (normalized, mean)
+cv_acc                                                           1
+cv_acc_nc                                                        1
+cv_acc_pc                                                        1
+cv_f1                                                            1
+data_name                                                    GTZAN
+hyper_params     {"C": 58.315789473684205, "gamma": 0.041753189...
+is_normalized                                                    1
+model_name                                                  mv_svm
+param_c                                                        NaN
+param_gamma                                                    NaN
+param_linvar                                                 False
+prepr_name                                              RhythmData
+test_acc                                                     0.975
+test_acc_nc                                                   0.95
+test_acc_pc                                                      1
+test_f1                                                    0.97561
+Name: 356, dtype: object
+
+
+columbia-train: mv_svm on RhythmData with 1.0 (normalized, mean)
+cv_acc                                                           1
+cv_acc_nc                                                        1
+cv_acc_pc                                                        1
+cv_f1                                                            1
+data_name                                           columbia-train
+hyper_params     {"C": 6.2105263157894735, "gamma": 0.018873918...
+is_normalized                                                    1
+model_name                                                  mv_svm
+param_c                                                        NaN
+param_gamma                                                    NaN
+param_linvar                                                 False
+prepr_name                                              RhythmData
+test_acc                                                         1
+test_acc_nc                                                      1
+test_acc_pc                                                      1
+test_f1                                                          1
+Name: 1311, dtype: object
+
+
+
+
+===============================
+Best run per dataset test_acc:
+GTZAN: mv_linear on RhythmData with 1.0 (normalized, mean)
+cv_acc             0.859077
+cv_acc_nc          0.944444
+cv_acc_pc          0.801555
+cv_f1              0.837731
+data_name             GTZAN
+hyper_params            NaN
+is_normalized             1
+model_name        mv_linear
+param_c                 NaN
+param_gamma             NaN
+param_linvar          False
+prepr_name       RhythmData
+test_acc                  1
+test_acc_nc               1
+test_acc_pc               1
+test_f1                   1
+Name: 0, dtype: object
+
+
+columbia-train: mv_linear on RhythmData with 1.0 (normalized, mean)
+cv_acc                    0.975
+cv_acc_nc                     1
+cv_acc_pc              0.952564
+cv_f1                  0.974638
+data_name        columbia-train
+hyper_params                NaN
+is_normalized                 1
+model_name            mv_linear
+param_c                     NaN
+param_gamma                 NaN
+param_linvar              False
+prepr_name           RhythmData
+test_acc                      1
+test_acc_nc                   1
+test_acc_pc                   1
+test_f1                       1
+Name: 1256, dtype: object
+
+
+Perfect Setups (cv_acc=test_acc=1)             data_name  prepr_name model_name  \
+1311   columbia-train  RhythmData     mv_svm   
+1343   columbia-train  RhythmData     mv_svm   
+1369   columbia-train  RhythmData     mv_svm   
+1372   columbia-train  RhythmData     mv_svm   
+1518   columbia-train  RhythmData     mv_svm   
+1609   columbia-train  RhythmData     mv_svm   
+1640   columbia-train  RhythmData     mv_svm   
+1848   columbia-train  RhythmData     mv_svm   
+1850   columbia-train  RhythmData     mv_svm   
+1864   columbia-train  RhythmData      mv_nn   
+1867   columbia-train  RhythmData      mv_nn   
+1868   columbia-train  RhythmData      mv_nn   
+1869   columbia-train  RhythmData      mv_nn   
+1870   columbia-train  RhythmData      mv_nn   
+11047  columbia-train  RhythmData     mv_svm   
+11079  columbia-train  RhythmData     mv_svm   
+11105  columbia-train  RhythmData     mv_svm   
+11108  columbia-train  RhythmData     mv_svm   
+11254  columbia-train  RhythmData     mv_svm   
+11345  columbia-train  RhythmData     mv_svm   
+11376  columbia-train  RhythmData     mv_svm   
+11584  columbia-train  RhythmData     mv_svm   
+11586  columbia-train  RhythmData     mv_svm   
+11600  columbia-train  RhythmData      mv_nn   
+11603  columbia-train  RhythmData      mv_nn   
+11604  columbia-train  RhythmData      mv_nn   
+11605  columbia-train  RhythmData      mv_nn   
+11606  columbia-train  RhythmData      mv_nn   
+20807  columbia-train  RhythmData     mv_svm   
+20839  columbia-train  RhythmData     mv_svm   
+20865  columbia-train  RhythmData     mv_svm   
+20868  columbia-train  RhythmData     mv_svm   
+21014  columbia-train  RhythmData     mv_svm   
+21105  columbia-train  RhythmData     mv_svm   
+21136  columbia-train  RhythmData     mv_svm   
+21344  columbia-train  RhythmData     mv_svm   
+21346  columbia-train  RhythmData     mv_svm   
+21360  columbia-train  RhythmData      mv_nn   
+21363  columbia-train  RhythmData      mv_nn   
+21364  columbia-train  RhythmData      mv_nn   
+21365  columbia-train  RhythmData      mv_nn   
+21366  columbia-train  RhythmData      mv_nn   
+30567  columbia-train  RhythmData     mv_svm   
+30599  columbia-train  RhythmData     mv_svm   
+30625  columbia-train  RhythmData     mv_svm   
+30628  columbia-train  RhythmData     mv_svm   
+30774  columbia-train  RhythmData     mv_svm   
+30865  columbia-train  RhythmData     mv_svm   
+30896  columbia-train  RhythmData     mv_svm   
+31104  columbia-train  RhythmData     mv_svm   
+31106  columbia-train  RhythmData     mv_svm   
+31120  columbia-train  RhythmData      mv_nn   
+31123  columbia-train  RhythmData      mv_nn   
+31124  columbia-train  RhythmData      mv_nn   
+31125  columbia-train  RhythmData      mv_nn   
+31126  columbia-train  RhythmData      mv_nn   
+
+                                            hyper_params  
+1311   {"C": 6.2105263157894735, "gamma": 0.018873918...  
+1343   {"C": 11.421052631578947, "gamma": 0.092367085...  
+1369   {"C": 16.63157894736842, "gamma": 0.0038566204...  
+1372   {"C": 16.63157894736842, "gamma": 0.0417531893...  
+1518   {"C": 42.68421052631579, "gamma": 0.0017433288...  
+1609   {"C": 58.315789473684205, "gamma": 0.003856620...  
+1640   {"C": 63.526315789473685, "gamma": 0.008531678...  
+1848        {"C": 100.0, "gamma": 0.0017433288221999908}  
+1850         {"C": 100.0, "gamma": 0.008531678524172814}  
+1864   {"hidden_neurons": [50, 50, 50], "dropout": 0.25}  
+1867          {"hidden_neurons": [100], "dropout": 0.25}  
+1868           {"hidden_neurons": [100], "dropout": 0.5}  
+1869      {"hidden_neurons": [100, 100], "dropout": 0.0}  
+1870     {"hidden_neurons": [100, 100], "dropout": 0.25}  
+11047  {"C": 6.2105263157894735, "gamma": 0.018873918...  
+11079  {"C": 11.421052631578947, "gamma": 0.092367085...  
+11105  {"C": 16.63157894736842, "gamma": 0.0038566204...  
+11108  {"C": 16.63157894736842, "gamma": 0.0417531893...  
+11254  {"C": 42.68421052631579, "gamma": 0.0017433288...  
+11345  {"C": 58.315789473684205, "gamma": 0.003856620...  
+11376  {"C": 63.526315789473685, "gamma": 0.008531678...  
+11584       {"C": 100.0, "gamma": 0.0017433288221999908}  
+11586        {"C": 100.0, "gamma": 0.008531678524172814}  
+11600  {"hidden_neurons": [50, 50, 50], "dropout": 0.25}  
+11603         {"hidden_neurons": [100], "dropout": 0.25}  
+11604          {"hidden_neurons": [100], "dropout": 0.5}  
+11605     {"hidden_neurons": [100, 100], "dropout": 0.0}  
+11606    {"hidden_neurons": [100, 100], "dropout": 0.25}  
+20807  {"C": 6.2105263157894735, "gamma": 0.018873918...  
+20839  {"C": 11.421052631578947, "gamma": 0.092367085...  
+20865  {"C": 16.63157894736842, "gamma": 0.0038566204...  
+20868  {"C": 16.63157894736842, "gamma": 0.0417531893...  
+21014  {"C": 42.68421052631579, "gamma": 0.0017433288...  
+21105  {"C": 58.315789473684205, "gamma": 0.003856620...  
+21136  {"C": 63.526315789473685, "gamma": 0.008531678...  
+21344       {"C": 100.0, "gamma": 0.0017433288221999908}  
+21346        {"C": 100.0, "gamma": 0.008531678524172814}  
+21360  {"hidden_neurons": [50, 50, 50], "dropout": 0.25}  
+21363         {"hidden_neurons": [100], "dropout": 0.25}  
+21364          {"hidden_neurons": [100], "dropout": 0.5}  
+21365     {"hidden_neurons": [100, 100], "dropout": 0.0}  
+21366    {"hidden_neurons": [100, 100], "dropout": 0.25}  
+30567  {"C": 6.2105263157894735, "gamma": 0.018873918...  
+30599  {"C": 11.421052631578947, "gamma": 0.092367085...  
+30625  {"C": 16.63157894736842, "gamma": 0.0038566204...  
+30628  {"C": 16.63157894736842, "gamma": 0.0417531893...  
+30774  {"C": 42.68421052631579, "gamma": 0.0017433288...  
+30865  {"C": 58.315789473684205, "gamma": 0.003856620...  
+30896  {"C": 63.526315789473685, "gamma": 0.008531678...  
+31104       {"C": 100.0, "gamma": 0.0017433288221999908}  
+31106        {"C": 100.0, "gamma": 0.008531678524172814}  
+31120  {"hidden_neurons": [50, 50, 50], "dropout": 0.25}  
+31123         {"hidden_neurons": [100], "dropout": 0.25}  
+31124          {"hidden_neurons": [100], "dropout": 0.5}  
+31125     {"hidden_neurons": [100, 100], "dropout": 0.0}  
+31126    {"hidden_neurons": [100, 100], "dropout": 0.25}  
+****************************
+****************************
+Best model per feature set
+==========================
+data_name       GTZAN
+prepr_name    MIRData
+Name: 893, dtype: object
+->
+model_name        mv_svm
+param_linvar       False
+cv_acc          0.984308
+test_acc           0.875
+Name: 893, dtype: object
+----
+
+data_name          GTZAN
+prepr_name    RhythmData
+Name: 356, dtype: object
+->
+model_name      mv_svm
+param_linvar     False
+cv_acc               1
+test_acc         0.975
+Name: 356, dtype: object
+----
+
+data_name           GTZAN
+prepr_name    SpectroData
+Name: 3720, dtype: object
+->
+model_name      simple_cnn
+param_linvar          True
+cv_acc            0.944923
+test_acc             0.925
+Name: 3720, dtype: object
+----
+
+data_name     columbia-train
+prepr_name           MIRData
+Name: 2179, dtype: object
+->
+model_name      mv_svm
+param_linvar     False
+cv_acc               1
+test_acc           0.9
+Name: 2179, dtype: object
+----
+
+data_name     columbia-train
+prepr_name        RhythmData
+Name: 1311, dtype: object
+->
+model_name      mv_svm
+param_linvar     False
+cv_acc               1
+test_acc             1
+Name: 1311, dtype: object
+----
+
+data_name     columbia-train
+prepr_name       SpectroData
+Name: 5532, dtype: object
+->
+model_name      simple_cnn
+param_linvar          True
+cv_acc            0.991667
+test_acc              0.95
+Name: 5532, dtype: object
+----
+
+==========================
+****************************
+****************************
+Best feature set for each model
+==========================
+data_name        GTZAN
+model_name      linear
+param_linvar     False
+Name: 3119, dtype: object
+->
+prepr_name     MIRData
+cv_acc        0.906154
+test_acc           0.8
+Name: 3119, dtype: object
+----
+
+data_name        GTZAN
+model_name      linear
+param_linvar      True
+Name: 2514, dtype: object
+->
+prepr_name    RhythmData
+cv_acc          0.899385
+test_acc           0.975
+Name: 2514, dtype: object
+----
+
+data_name         GTZAN
+model_name      meansvm
+param_linvar      False
+Name: 2663, dtype: object
+->
+prepr_name    RhythmData
+cv_acc          0.976308
+test_acc           0.975
+Name: 2663, dtype: object
+----
+
+data_name           GTZAN
+model_name      mv_linear
+param_linvar        False
+Name: 628, dtype: object
+->
+prepr_name     MIRData
+cv_acc        0.866769
+test_acc          0.95
+Name: 628, dtype: object
+----
+
+data_name       GTZAN
+model_name      mv_nn
+param_linvar    False
+Name: 625, dtype: object
+->
+prepr_name    RhythmData
+cv_acc                 1
+test_acc           0.975
+Name: 625, dtype: object
+----
+
+data_name        GTZAN
+model_name      mv_svm
+param_linvar     False
+Name: 356, dtype: object
+->
+prepr_name    RhythmData
+cv_acc                 1
+test_acc           0.975
+Name: 356, dtype: object
+----
+
+data_name            GTZAN
+model_name      simple_cnn
+param_linvar         False
+Name: 2513, dtype: object
+->
+prepr_name    RhythmData
+cv_acc          0.945231
+test_acc           0.975
+Name: 2513, dtype: object
+----
+
+data_name            GTZAN
+model_name      simple_cnn
+param_linvar          True
+Name: 3116, dtype: object
+->
+prepr_name     MIRData
+cv_acc        0.968615
+test_acc          0.95
+Name: 3116, dtype: object
+----
+
+data_name       columbia-train
+model_name              linear
+param_linvar             False
+Name: 5535, dtype: object
+->
+prepr_name    SpectroData
+cv_acc           0.966667
+test_acc             0.95
+Name: 5535, dtype: object
+----
+
+data_name       columbia-train
+model_name              linear
+param_linvar              True
+Name: 4326, dtype: object
+->
+prepr_name    RhythmData
+cv_acc          0.966667
+test_acc           0.975
+Name: 4326, dtype: object
+----
+
+data_name       columbia-train
+model_name             meansvm
+param_linvar             False
+Name: 4476, dtype: object
+->
+prepr_name    RhythmData
+cv_acc                 1
+test_acc           0.975
+Name: 4476, dtype: object
+----
+
+data_name       columbia-train
+model_name           mv_linear
+param_linvar             False
+Name: 1256, dtype: object
+->
+prepr_name    RhythmData
+cv_acc             0.975
+test_acc               1
+Name: 1256, dtype: object
+----
+
+data_name       columbia-train
+model_name               mv_nn
+param_linvar             False
+Name: 1857, dtype: object
+->
+prepr_name    RhythmData
+cv_acc                 1
+test_acc           0.975
+Name: 1857, dtype: object
+----
+
+data_name       columbia-train
+model_name              mv_svm
+param_linvar             False
+Name: 1311, dtype: object
+->
+prepr_name    RhythmData
+cv_acc                 1
+test_acc               1
+Name: 1311, dtype: object
+----
+
+data_name       columbia-train
+model_name          simple_cnn
+param_linvar             False
+Name: 4325, dtype: object
+->
+prepr_name    RhythmData
+cv_acc          0.991667
+test_acc               1
+Name: 4325, dtype: object
+----
+
+data_name       columbia-train
+model_name          simple_cnn
+param_linvar              True
+Name: 4928, dtype: object
+->
+prepr_name    MIRData
+cv_acc              1
+test_acc         0.95
+Name: 4928, dtype: object
+----
+
+==========================
+****************************
+****************************
+Linear seperability for each preprocessing
+data_name          GTZAN
+prepr_name    RhythmData
+cv_acc          0.890769
+test_acc           0.975
+Name: 2515, dtype: object
+--------
+data_name        GTZAN
+prepr_name     MIRData
+cv_acc        0.906154
+test_acc           0.8
+Name: 3119, dtype: object
+--------
+data_name           GTZAN
+prepr_name    SpectroData
+cv_acc               0.82
+test_acc             0.75
+Name: 3723, dtype: object
+--------
+data_name     columbia-train
+prepr_name        RhythmData
+cv_acc              0.958333
+test_acc               0.975
+Name: 4327, dtype: object
+--------
+data_name     columbia-train
+prepr_name           MIRData
+cv_acc              0.883333
+test_acc                0.95
+Name: 4931, dtype: object
+--------
+data_name     columbia-train
+prepr_name       SpectroData
+cv_acc              0.966667
+test_acc                0.95
+Name: 5535, dtype: object
+--------
+data_name          GTZAN
+prepr_name    RhythmData
+cv_acc          0.890769
+test_acc           0.975
+Name: 12275, dtype: object
+--------
+data_name        GTZAN
+prepr_name     MIRData
+cv_acc        0.906154
+test_acc           0.8
+Name: 12879, dtype: object
+--------
+data_name           GTZAN
+prepr_name    SpectroData
+cv_acc               0.82
+test_acc             0.75
+Name: 13483, dtype: object
+--------
+data_name     columbia-train
+prepr_name        RhythmData
+cv_acc              0.958333
+test_acc               0.975
+Name: 14087, dtype: object
+--------
+data_name     columbia-train
+prepr_name           MIRData
+cv_acc              0.883333
+test_acc                0.95
+Name: 14691, dtype: object
+--------
+data_name     columbia-train
+prepr_name       SpectroData
+cv_acc              0.966667
+test_acc                0.95
+Name: 15295, dtype: object
+--------
+data_name          GTZAN
+prepr_name    RhythmData
+cv_acc          0.890769
+test_acc           0.975
+Name: 22035, dtype: object
+--------
+data_name        GTZAN
+prepr_name     MIRData
+cv_acc        0.906154
+test_acc           0.8
+Name: 22639, dtype: object
+--------
+data_name           GTZAN
+prepr_name    SpectroData
+cv_acc               0.82
+test_acc             0.75
+Name: 23243, dtype: object
+--------
+data_name     columbia-train
+prepr_name        RhythmData
+cv_acc              0.958333
+test_acc               0.975
+Name: 23847, dtype: object
+--------
+data_name     columbia-train
+prepr_name           MIRData
+cv_acc              0.883333
+test_acc                0.95
+Name: 24451, dtype: object
+--------
+data_name     columbia-train
+prepr_name       SpectroData
+cv_acc              0.966667
+test_acc                0.95
+Name: 25055, dtype: object
+--------
+****************************
+****************************
+Benefit of using linvar for each preprocessing and model
+data_name       GTZAN
+prepr_name    MIRData
+model_name     linear
+Name: 3118, dtype: object
+cv_acc benefit:  -0.007384603096888709
+test_acc benefit:  0.02499999999999991
+--------
+data_name          GTZAN
+prepr_name       MIRData
+model_name    simple_cnn
+Name: 3116, dtype: object
+cv_acc benefit:  0.04000001720281754
+test_acc benefit:  0.0
+--------
+data_name          GTZAN
+prepr_name    RhythmData
+model_name        linear
+Name: 2514, dtype: object
+cv_acc benefit:  0.008615407907045736
+test_acc benefit:  0.0
+--------
+data_name          GTZAN
+prepr_name    RhythmData
+model_name    simple_cnn
+Name: 2512, dtype: object
+cv_acc benefit:  0.0006153956559987739
+test_acc benefit:  0.0
+--------
+data_name           GTZAN
+prepr_name    SpectroData
+model_name         linear
+Name: 3722, dtype: object
+cv_acc benefit:  0.07107693022948036
+test_acc benefit:  0.09999999999999998
+--------
+data_name           GTZAN
+prepr_name    SpectroData
+model_name     simple_cnn
+Name: 3720, dtype: object
+cv_acc benefit:  0.007384620006267939
+test_acc benefit:  -0.02499999999999991
+--------
+data_name     columbia-train
+prepr_name           MIRData
+model_name            linear
+Name: 4930, dtype: object
+cv_acc benefit:  0.04166666269302377
+test_acc benefit:  -0.04999999999999993
+--------
+data_name     columbia-train
+prepr_name           MIRData
+model_name        simple_cnn
+Name: 4928, dtype: object
+cv_acc benefit:  0.016666662693023637
+test_acc benefit:  0.0
+--------
+data_name     columbia-train
+prepr_name        RhythmData
+model_name            linear
+Name: 4326, dtype: object
+cv_acc benefit:  0.008333341280619577
+test_acc benefit:  0.0
+--------
+data_name     columbia-train
+prepr_name        RhythmData
+model_name        simple_cnn
+Name: 4324, dtype: object
+cv_acc benefit:  -0.02499999602635683
+test_acc benefit:  -0.025000000000000022
+--------
+data_name     columbia-train
+prepr_name       SpectroData
+model_name            linear
+Name: 5534, dtype: object
+cv_acc benefit:  -0.008333329359690222
+test_acc benefit:  -0.02499999999999991
+--------
+data_name     columbia-train
+prepr_name       SpectroData
+model_name        simple_cnn
+Name: 5532, dtype: object
+cv_acc benefit:  0.025000003973643214
+test_acc benefit:  0.0
+--------

@@ -58,6 +58,8 @@ na = np.newaxis
 
 
 model_names = ["mv_linear"] # , "linear", "simple_cnn"]
+
+
 def add_mv_grid():
 
     C_values = np.linspace(1, 100, 20)  # [96.]  #np.linspace(1., 100, 2)
@@ -381,11 +383,11 @@ def analyze_trained_models():
                 visualize_filter(data, model_name, model, col_test_data, music_sample, speech_sample)
 
 
-def important_channels():
+def important_channels(model_names=model_names):
     MUSIC = 1
     SPEECH = 0
 
-    results = pd.DataFrame(columns=["model", "channel", "preprocesssing", "effect_acc", "effect_kldiv"])
+    results = pd.DataFrame(columns=["model", "channel", "preprocesssing", "effect_acc", "effect_kldiv", "test_acc"])
     row_id = 0 # counter for where to store the results
 
     for data_name, kwargs in data_path.items():
@@ -414,6 +416,7 @@ def important_channels():
                     y_, p_ = 1-y, 1-p
                     return np.sum( y*np.log(y/p) ) + np.sum( y_*np.log(y_/p_) )
 
+                test_acc = model.evaluate(col_test_data.X, col_test_data.Y)[0]
                 y = model.predict(data.X)
 
                 for channel in range(data.X.shape[-1]):
@@ -421,12 +424,12 @@ def important_channels():
                     X_[:,:,:,channel] = 0
                     p = model.predict(X_)
 
-                    values = [model_name, channel, prepr_name, 1-np.mean((p>0.5)==(y>0.5)), kl_div(y, p)]
+                    values = [model_name, channel, prepr_name, 1-np.mean((p>0.5)==(y>0.5)), kl_div(y, p), test_acc]
                     results[row_id] = values
                     row_id += 1
                     print(values)
 
-    results.to_csv("results/effect_of_channels.csv", index=False)
+    results.to_csv("effect_of_channels.csv", index=False)
     print('...saved results')
 
 
@@ -552,7 +555,7 @@ if __name__ == "__main__":
             try:
                 add = pd.read_csv(join("results", file))
                 if not "hyper_params" in add:
-                    add["hyper_params"].fillna("")
+                    add["hyper_params"] = ""
                 all.append(add)
             except Exception as e:
                 print("Skipped {} bc {} ({})".format(file, e, type(e)))
@@ -570,6 +573,9 @@ if __name__ == "__main__":
 
         results = results.dropna(subset=["cv_acc"])
         results["param_linvar"].fillna(False, inplace=True)
+
+
+        #results = results.sort_values(["cv_acc", "test_acc"], ascending=False)
 
         #results = results.drop(
         #    results.loc[results.cv_acc].index
@@ -632,6 +638,8 @@ if __name__ == "__main__":
                 print("----\n")
             print("==========================")
 
+        rows = results.loc[(results.cv_acc==1.) & (results.test_acc==1.)]
+        print("Perfect Setups (cv_acc=test_acc=1)", rows[["data_name", "prepr_name", "model_name", "hyper_params"]])
         """
         #Best model for each preprocessing type
         metric = "cv_acc"
@@ -645,14 +653,16 @@ if __name__ == "__main__":
         print("****************************")
         print("****************************")
         print("Best model per feature set")
-        best_setup(["data_name", "prepr_name"], "cv_acc", ["model_name", "param_linvar", "cv_acc"])
+        best_setup(["data_name", "prepr_name"], "cv_acc", ["model_name", "param_linvar", "cv_acc", "test_acc"])
+
+
 
 
 
         print("****************************")
         print("****************************")
         print("Best feature set for each model")
-        best_setup(["data_name", "model_name", "param_linvar"], "cv_acc", ["prepr_name", "cv_acc"])
+        best_setup(["data_name", "model_name", "param_linvar"], "cv_acc", ["prepr_name", "cv_acc", "test_acc"])
 
 
         print("****************************")
