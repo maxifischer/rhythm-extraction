@@ -252,7 +252,7 @@ def get_model(modelname, input_shape, kwargs={}):
 
     elif modelname == 'mv_linear':
         model = Sequential()
-        input_dims = 2 * input_shape[-1]
+        input_dims = 2 * input_shape[-1] * input_shape[0]
         model.add(Dense(1, input_dim=input_dims, activation='sigmoid'))
         #model.add(Reshape((-1,)))
         model.compile(loss=keras.losses.binary_crossentropy,
@@ -264,7 +264,7 @@ def get_model(modelname, input_shape, kwargs={}):
         # input_dims, hidden_neurons=[100], dropout=0
 
         kwargs = json.loads(modelname.split("--")[1])
-        input_dims = 2*input_shape[-1]
+        input_dims = 2*input_shape[-1] * input_shape[0]
         return MeanVarNN(input_dims, **kwargs)
 
 

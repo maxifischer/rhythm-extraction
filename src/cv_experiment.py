@@ -37,7 +37,7 @@ import json
 MUSIC = 1
 SPEECH = 0
 
-RUN_NAME='mv-models'
+RUN_NAME='mv-spectro'
 
 data_path = {
                 "GTZAN": {
@@ -58,6 +58,15 @@ na = np.newaxis
 
 
 model_names = ["mv_linear"] # , "linear", "simple_cnn"]
+
+
+def add_mv_best():
+    df = pd.read_csv("results/mv-models.csv")
+    best = df.loc[df.cv_acc == 1.]
+    for _, row in best.iterrows():
+        model_names.append(row["model_name"]+"--"+row["hyper_params"])
+
+    print(model_names)
 
 
 def add_mv_grid():
@@ -508,7 +517,7 @@ def run_on_all(experiment):
     for data_name, kwargs in data_path.items():
 
         if data_name == "columbia-test": continue # don't use the test set for training
-        for Preprocessor in [RhythmData, MIRData]: #, SpectroData]:
+        for Preprocessor in [SpectroData]:
             prepr_name = Preprocessor.__name__
             data = Preprocessor(**kwargs)
 
@@ -565,6 +574,7 @@ if __name__ == "__main__":
     if cmd == "cv":
         #add_svm_grid()
         add_mv_grid()
+        #add_mv_best()
         print("CV for ", model_names)
         if not os.path.exists('results'):
             os.mkdir('results')
