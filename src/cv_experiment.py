@@ -120,26 +120,38 @@ def train_test_experiment(data, model_name, col_test_data, epochs=100, batch_siz
 
     return result
 
+
+
+
 def evaluate_on_test_set(model, model_name, col_test_data, return_conf_matrix=False):
-    
     try:
 
+        P = model.predict(col_test_data.X)
+        Y = np.reshape(col_test_data.Y, P.shape)
+
         if return_conf_matrix:
-            test_predictions  = model.predict(col_test_data.X)
-            test_acc = confusion_matrix(col_test_data.Y, test_predictions)
+            test_acc = confusion_matrix(col_test_data.Y, P)
         else:
-            test_acc  = model.evaluate(col_test_data.X, col_test_data.Y)
+            test_acc = model.evaluate(col_test_data.X, Y)
     except ValueError:
         # if the test set has a different time length then the train set, try to reshape the model and test then
         test_input_shape = col_test_data.X.shape[1:]
         model_weights = model.get_weights()
-        reshaped_model = reshape_keras_conv_input(model_name, test_input_shape, model_weights)
+        model = reshape_keras_conv_input(model_name, test_input_shape, model_weights)
+
+        P = model.predict(col_test_data.X)
+        Y = np.reshape(col_test_data.Y, P.shape)
 
         if return_conf_matrix:
-            test_predictions = reshaped_model.predict(col_test_data.X)
-            test_acc = confusion_matrix(col_test_data.Y, test_predictions)
+            test_acc = confusion_matrix(col_test_data.Y, P)
         else:
-            test_acc = reshaped_model.evaluate(col_test_data.X, col_test_data.Y)
+            test_acc = model.evaluate(col_test_data.X, Y)
+    if test_acc[0] < 0.5:
+        print("this is fucked:", model_name, test_acc[0])
+        pdb.set_trace()
+        print("P", P.shape)
+        print("Y", Y.shape)
+
 
     return test_acc
 
@@ -162,7 +174,9 @@ def get_trained_model(data, model_name, epochs=100, batch_size=8):
                                                 epochs=epochs, verbose=0)
     try:
         model.load_weights(weight_path)
+        print("loaded model")
     except:
+        print("train model")
         train_model(model, data.X, data.Y)
         try:
             model.save(weight_path)
