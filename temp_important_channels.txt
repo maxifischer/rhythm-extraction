@@ -1,0 +1,419 @@
+Col test data 
+X: (40, 1, 750, 14), Y: (40,)
+
+
+-------
+Important channels mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409} on GTZAN - RhythmData
+get model: input shape [1, 1500, 14]
+input shape: (128, 1, 1500, 14)
+meaned shape: (128, 28)
+...finished fitting
+.
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 0, 'RhythmData', 0.1171875, nan, 0.975]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 1, 'RhythmData', 0.03125, nan, 0.975]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 2, 'RhythmData', 0.0, nan, 0.975]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 3, 'RhythmData', 0.46875, nan, 0.975]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 4, 'RhythmData', 0.0, nan, 0.975]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 5, 'RhythmData', 0.015625, nan, 0.975]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 6, 'RhythmData', 0.0, nan, 0.975]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 7, 'RhythmData', 0.0078125, nan, 0.975]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 8, 'RhythmData', 0.0, nan, 0.975]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 9, 'RhythmData', 0.046875, nan, 0.975]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 10, 'RhythmData', 0.1640625, nan, 0.975]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 11, 'RhythmData', 0.0078125, nan, 0.975]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 12, 'RhythmData', 0.0078125, nan, 0.975]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 13, 'RhythmData', 0.0390625, nan, 0.975]
+
+
+-------
+Important channels mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0} on GTZAN - RhythmData
+get model: input shape [1, 1500, 14]
+input shape: (128, 1, 1500, 14)
+meaned shape: (128, 28)
+...finished fitting
+.
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 0, 'RhythmData', 0.125, nan, 0.975]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 1, 'RhythmData', 0.015625, nan, 0.975]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 2, 'RhythmData', 0.0, nan, 0.975]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 3, 'RhythmData', 0.4921875, nan, 0.975]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 4, 'RhythmData', 0.046875, nan, 0.975]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 5, 'RhythmData', 0.046875, nan, 0.975]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 6, 'RhythmData', 0.0546875, nan, 0.975]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 7, 'RhythmData', 0.0, nan, 0.975]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 8, 'RhythmData', 0.0, nan, 0.975]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 9, 'RhythmData', 0.03125, nan, 0.975]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 10, 'RhythmData', 0.109375, nan, 0.975]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 11, 'RhythmData', 0.015625, nan, 0.975]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 12, 'RhythmData', 0.0, nan, 0.975]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 13, 'RhythmData', 0.0390625, nan, 0.975]
+
+
+-------
+Important channels mv_linear on GTZAN - RhythmData
+get model: input shape [1, 1500, 14]
+input shape: (128, 1, 1500, 14)
+meaned shape: (128, 28)
+...finished fitting
+.
+['mv_linear', 0, 'RhythmData', 0.0234375, 0.29771423, 1.0]
+['mv_linear', 1, 'RhythmData', 0.2109375, 10.23458, 1.0]
+['mv_linear', 2, 'RhythmData', 0.0390625, 0.83861876, 1.0]
+['mv_linear', 3, 'RhythmData', 0.2421875, 14.237967, 1.0]
+['mv_linear', 4, 'RhythmData', 0.078125, 2.514441, 1.0]
+['mv_linear', 5, 'RhythmData', 0.0546875, 0.6640377, 1.0]
+['mv_linear', 6, 'RhythmData', 0.09375, 4.420496, 1.0]
+['mv_linear', 7, 'RhythmData', 0.0390625, 0.7502432, 1.0]
+['mv_linear', 8, 'RhythmData', 0.015625, 0.062408328, 1.0]
+['mv_linear', 9, 'RhythmData', 0.015625, 0.17025506, 1.0]
+['mv_linear', 10, 'RhythmData', 0.015625, 0.151541, 1.0]
+['mv_linear', 11, 'RhythmData', 0.0546875, 0.6769185, 1.0]
+['mv_linear', 12, 'RhythmData', 0.0546875, 0.57273483, 1.0]
+['mv_linear', 13, 'RhythmData', 0.1171875, 9.464129, 1.0]
+
+
+-------
+Important channels linear on GTZAN - RhythmData
+get model: input shape [1, 1500, 14]
+get model: input shape (1, 750, 14)
+
+32/40 [=======================>......] - ETA: 0s
+40/40 [==============================] - 0s 6ms/step
+['linear', 0, 'RhythmData', 0.3984375, 89.926414, 0.21204307079315185]
+['linear', 1, 'RhythmData', 0.453125, 84.82846, 0.21204307079315185]
+['linear', 2, 'RhythmData', 0.21875, 23.449532, 0.21204307079315185]
+['linear', 3, 'RhythmData', 0.5234375, 266.99585, 0.21204307079315185]
+['linear', 4, 'RhythmData', 0.1328125, 7.5726976, 0.21204307079315185]
+['linear', 5, 'RhythmData', 0.1171875, 6.0710783, 0.21204307079315185]
+['linear', 6, 'RhythmData', 0.4609375, 109.302475, 0.21204307079315185]
+['linear', 7, 'RhythmData', 0.1640625, 11.528999, 0.21204307079315185]
+['linear', 8, 'RhythmData', 0.21875, 18.300907, 0.21204307079315185]
+['linear', 9, 'RhythmData', 0.1796875, 16.389313, 0.21204307079315185]
+['linear', 10, 'RhythmData', 0.2421875, 30.40784, 0.21204307079315185]
+['linear', 11, 'RhythmData', 0.25, 33.961708, 0.21204307079315185]
+['linear', 12, 'RhythmData', 0.0078125, 0.13770175, 0.21204307079315185]
+['linear', 13, 'RhythmData', 0.328125, 33.535114, 0.21204307079315185]
+
+
+-------
+Important channels simple_cnn on GTZAN - RhythmData
+get model: input shape [1, 1500, 14]
+get model: input shape (1, 750, 14)
+
+32/40 [=======================>......] - ETA: 0s
+40/40 [==============================] - 0s 4ms/step
+['simple_cnn', 0, 'RhythmData', 0.296875, 62.049557, 0.12411717772483825]
+['simple_cnn', 1, 'RhythmData', 0.21875, 31.462132, 0.12411717772483825]
+['simple_cnn', 2, 'RhythmData', 0.109375, 11.994543, 0.12411717772483825]
+['simple_cnn', 3, 'RhythmData', 0.5, inf, 0.12411717772483825]
+['simple_cnn', 4, 'RhythmData', 0.1015625, 11.339233, 0.12411717772483825]
+['simple_cnn', 5, 'RhythmData', 0.03125, 1.8242736, 0.12411717772483825]
+['simple_cnn', 6, 'RhythmData', 0.203125, 28.785934, 0.12411717772483825]
+['simple_cnn', 7, 'RhythmData', 0.0234375, 2.3111424, 0.12411717772483825]
+['simple_cnn', 8, 'RhythmData', 0.078125, 8.961273, 0.12411717772483825]
+['simple_cnn', 9, 'RhythmData', 0.015625, 1.3838387, 0.12411717772483825]
+['simple_cnn', 10, 'RhythmData', 0.3671875, inf, 0.12411717772483825]
+['simple_cnn', 11, 'RhythmData', 0.203125, 29.691547, 0.12411717772483825]
+['simple_cnn', 12, 'RhythmData', 0.015625, 0.7491503, 0.12411717772483825]
+['simple_cnn', 13, 'RhythmData', 0.1953125, 25.441105, 0.12411717772483825]
+loaded from disk: -data-music_speech-music_wav--data-music_speech-speech_wav-_mir
+loaded from disk: -data-columbia_music_speech_corpus-test-music-vocals-data-columbia_music_speech_corpus-test-speech_mir
+Col test data 
+X: (40, 1, 1654, 9), Y: (40,)
+
+
+-------
+Important channels mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409} on GTZAN - MIRData
+get model: input shape [1, 3308, 9]
+input shape: (128, 1, 3308, 9)
+meaned shape: (128, 18)
+...finished fitting
+.
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 0, 'MIRData', 0.0234375, nan, 0.9]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 1, 'MIRData', 0.15625, nan, 0.9]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 2, 'MIRData', 0.2109375, nan, 0.9]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 3, 'MIRData', 0.2109375, nan, 0.9]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 4, 'MIRData', 0.328125, nan, 0.9]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 5, 'MIRData', 0.0859375, nan, 0.9]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 6, 'MIRData', 0.1328125, nan, 0.9]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 7, 'MIRData', 0.4921875, nan, 0.9]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 8, 'MIRData', 0.2421875, nan, 0.9]
+
+
+-------
+Important channels mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0} on GTZAN - MIRData
+get model: input shape [1, 3308, 9]
+input shape: (128, 1, 3308, 9)
+meaned shape: (128, 18)
+...finished fitting
+.
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 0, 'MIRData', 0.015625, nan, 0.925]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 1, 'MIRData', 0.2109375, nan, 0.925]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 2, 'MIRData', 0.203125, nan, 0.925]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 3, 'MIRData', 0.2734375, nan, 0.925]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 4, 'MIRData', 0.125, nan, 0.925]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 5, 'MIRData', 0.1171875, nan, 0.925]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 6, 'MIRData', 0.0546875, nan, 0.925]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 7, 'MIRData', 0.5, nan, 0.925]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 8, 'MIRData', 0.1953125, nan, 0.925]
+
+
+-------
+Important channels mv_linear on GTZAN - MIRData
+get model: input shape [1, 3308, 9]
+input shape: (128, 1, 3308, 9)
+meaned shape: (128, 18)
+...finished fitting
+.
+['mv_linear', 0, 'MIRData', 0.015625, 0.39879966, 0.925]
+['mv_linear', 1, 'MIRData', 0.03125, 0.2785921, 0.925]
+['mv_linear', 2, 'MIRData', 0.0546875, 2.0178237, 0.925]
+['mv_linear', 3, 'MIRData', 0.0390625, 1.5614176, 0.925]
+['mv_linear', 4, 'MIRData', 0.0390625, 1.6299367, 0.925]
+['mv_linear', 5, 'MIRData', 0.1640625, 17.742828, 0.925]
+['mv_linear', 6, 'MIRData', 0.1171875, 4.04846, 0.925]
+['mv_linear', 7, 'MIRData', 0.1484375, 9.650109, 0.925]
+['mv_linear', 8, 'MIRData', 0.03125, 1.9825665, 0.925]
+
+
+-------
+Important channels linear on GTZAN - MIRData
+get model: input shape [1, 3308, 9]
+get model: input shape (1, 1654, 9)
+
+32/40 [=======================>......] - ETA: 0s
+40/40 [==============================] - 0s 12ms/step
+['linear', 0, 'MIRData', 0.1171875, 6.277709, 0.3977151393890381]
+['linear', 1, 'MIRData', 0.40625, 50.66802, 0.3977151393890381]
+['linear', 2, 'MIRData', 0.46875, 97.456375, 0.3977151393890381]
+['linear', 3, 'MIRData', 0.53125, 158.02765, 0.3977151393890381]
+['linear', 4, 'MIRData', 0.1171875, 7.3883476, 0.3977151393890381]
+['linear', 5, 'MIRData', 0.1015625, 7.959894, 0.3977151393890381]
+['linear', 6, 'MIRData', 0.2421875, 48.1476, 0.3977151393890381]
+['linear', 7, 'MIRData', 0.46875, 293.89743, 0.3977151393890381]
+['linear', 8, 'MIRData', 0.1640625, 19.840206, 0.3977151393890381]
+
+
+-------
+Important channels simple_cnn on GTZAN - MIRData
+get model: input shape [1, 3308, 9]
+get model: input shape (1, 1654, 9)
+
+32/40 [=======================>......] - ETA: 0s
+40/40 [==============================] - 0s 5ms/step
+['simple_cnn', 0, 'MIRData', 0.2265625, 21.688313, 0.26206082105636597]
+['simple_cnn', 1, 'MIRData', 0.28125, 46.617493, 0.26206082105636597]
+['simple_cnn', 2, 'MIRData', 0.3671875, 71.61817, 0.26206082105636597]
+['simple_cnn', 3, 'MIRData', 0.515625, 199.99304, 0.26206082105636597]
+['simple_cnn', 4, 'MIRData', 0.03125, 3.0335474, 0.26206082105636597]
+['simple_cnn', 5, 'MIRData', 0.0703125, 8.388668, 0.26206082105636597]
+['simple_cnn', 6, 'MIRData', 0.3125, 76.42679, 0.26206082105636597]
+['simple_cnn', 7, 'MIRData', 0.484375, 305.16373, 0.26206082105636597]
+['simple_cnn', 8, 'MIRData', 0.1640625, 19.08379, 0.26206082105636597]
+Col test data 
+X: (40, 1, 750, 14), Y: (40,)
+
+
+-------
+Important channels mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409} on columbia-train - RhythmData
+get model: input shape [1, 750, 14]
+input shape: (120, 1, 750, 14)
+meaned shape: (120, 28)
+...finished fitting
+.
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 0, 'RhythmData', 0.0, nan, 0.975]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 1, 'RhythmData', 0.0, nan, 0.975]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 2, 'RhythmData', 0.0, nan, 0.975]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 3, 'RhythmData', 0.5, nan, 0.975]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 4, 'RhythmData', 0.0, nan, 0.975]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 5, 'RhythmData', 0.008333333333333304, nan, 0.975]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 6, 'RhythmData', 0.008333333333333304, nan, 0.975]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 7, 'RhythmData', 0.0, nan, 0.975]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 8, 'RhythmData', 0.0, nan, 0.975]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 9, 'RhythmData', 0.0, nan, 0.975]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 10, 'RhythmData', 0.0, nan, 0.975]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 11, 'RhythmData', 0.0, nan, 0.975]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 12, 'RhythmData', 0.0, nan, 0.975]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 13, 'RhythmData', 0.0, nan, 0.975]
+
+
+-------
+Important channels mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0} on columbia-train - RhythmData
+get model: input shape [1, 750, 14]
+input shape: (120, 1, 750, 14)
+meaned shape: (120, 28)
+...finished fitting
+.
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 0, 'RhythmData', 0.0, nan, 0.975]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 1, 'RhythmData', 0.0, nan, 0.975]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 2, 'RhythmData', 0.01666666666666672, nan, 0.975]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 3, 'RhythmData', 0.5, nan, 0.975]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 4, 'RhythmData', 0.008333333333333304, nan, 0.975]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 5, 'RhythmData', 0.008333333333333304, nan, 0.975]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 6, 'RhythmData', 0.0, nan, 0.975]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 7, 'RhythmData', 0.0, nan, 0.975]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 8, 'RhythmData', 0.0, nan, 0.975]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 9, 'RhythmData', 0.0, nan, 0.975]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 10, 'RhythmData', 0.0, nan, 0.975]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 11, 'RhythmData', 0.0, nan, 0.975]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 12, 'RhythmData', 0.0, nan, 0.975]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 13, 'RhythmData', 0.0, nan, 0.975]
+
+
+-------
+Important channels mv_linear on columbia-train - RhythmData
+get model: input shape [1, 750, 14]
+input shape: (120, 1, 750, 14)
+meaned shape: (120, 28)
+...finished fitting
+.
+['mv_linear', 0, 'RhythmData', 0.0, 0.37270403, 1.0]
+['mv_linear', 1, 'RhythmData', 0.01666666666666672, 1.9827461, 1.0]
+['mv_linear', 2, 'RhythmData', 0.04166666666666663, 8.606221, 1.0]
+['mv_linear', 3, 'RhythmData', 0.3666666666666667, 34.91027, 1.0]
+['mv_linear', 4, 'RhythmData', 0.0, 0.10554671, 1.0]
+['mv_linear', 5, 'RhythmData', 0.050000000000000044, 3.730567, 1.0]
+['mv_linear', 6, 'RhythmData', 0.008333333333333304, 0.3514378, 1.0]
+['mv_linear', 7, 'RhythmData', 0.0, 0.0041686296, 1.0]
+['mv_linear', 8, 'RhythmData', 0.008333333333333304, 1.1385176, 1.0]
+['mv_linear', 9, 'RhythmData', 0.0, 0.058971047, 1.0]
+['mv_linear', 10, 'RhythmData', 0.008333333333333304, 0.1519894, 1.0]
+['mv_linear', 11, 'RhythmData', 0.0, 0.10842347, 1.0]
+['mv_linear', 12, 'RhythmData', 0.008333333333333304, 0.55893445, 1.0]
+['mv_linear', 13, 'RhythmData', 0.033333333333333326, 4.558058, 1.0]
+
+
+-------
+Important channels linear on columbia-train - RhythmData
+get model: input shape [1, 750, 14]
+
+32/40 [=======================>......] - ETA: 0s
+40/40 [==============================] - 0s 8ms/step
+['linear', 0, 'RhythmData', 0.4666666666666667, 114.11271, 0.21204307079315185]
+['linear', 1, 'RhythmData', 0.45833333333333337, 73.15619, 0.21204307079315185]
+['linear', 2, 'RhythmData', 0.19166666666666665, 21.15142, 0.21204307079315185]
+['linear', 3, 'RhythmData', 0.525, inf, 0.21204307079315185]
+['linear', 4, 'RhythmData', 0.07499999999999996, 4.2686634, 0.21204307079315185]
+['linear', 5, 'RhythmData', 0.09166666666666667, 3.1886191, 0.21204307079315185]
+['linear', 6, 'RhythmData', 0.33333333333333337, 70.7779, 0.21204307079315185]
+['linear', 7, 'RhythmData', 0.1166666666666667, 7.079295, 0.21204307079315185]
+['linear', 8, 'RhythmData', 0.15833333333333333, 11.349028, 0.21204307079315185]
+['linear', 9, 'RhythmData', 0.10833333333333328, 10.664598, 0.21204307079315185]
+['linear', 10, 'RhythmData', 0.14166666666666672, 19.904354, 0.21204307079315185]
+['linear', 11, 'RhythmData', 0.15000000000000002, 20.678104, 0.21204307079315185]
+['linear', 12, 'RhythmData', 0.0, 0.08056474, 0.21204307079315185]
+['linear', 13, 'RhythmData', 0.22499999999999998, 19.513725, 0.21204307079315185]
+
+
+-------
+Important channels simple_cnn on columbia-train - RhythmData
+get model: input shape [1, 750, 14]
+
+32/40 [=======================>......] - ETA: 0s
+40/40 [==============================] - 0s 8ms/step
+['simple_cnn', 0, 'RhythmData', 0.2416666666666667, nan, 0.12411717772483825]
+['simple_cnn', 1, 'RhythmData', 0.15000000000000002, nan, 0.12411717772483825]
+['simple_cnn', 2, 'RhythmData', 0.025000000000000022, nan, 0.12411717772483825]
+['simple_cnn', 3, 'RhythmData', 0.5083333333333333, nan, 0.12411717772483825]
+['simple_cnn', 4, 'RhythmData', 0.025000000000000022, nan, 0.12411717772483825]
+['simple_cnn', 5, 'RhythmData', 0.008333333333333304, nan, 0.12411717772483825]
+['simple_cnn', 6, 'RhythmData', 0.10833333333333328, nan, 0.12411717772483825]
+['simple_cnn', 7, 'RhythmData', 0.008333333333333304, nan, 0.12411717772483825]
+['simple_cnn', 8, 'RhythmData', 0.01666666666666672, nan, 0.12411717772483825]
+['simple_cnn', 9, 'RhythmData', 0.008333333333333304, nan, 0.12411717772483825]
+['simple_cnn', 10, 'RhythmData', 0.3583333333333333, nan, 0.12411717772483825]
+['simple_cnn', 11, 'RhythmData', 0.125, nan, 0.12411717772483825]
+['simple_cnn', 12, 'RhythmData', 0.0, nan, 0.12411717772483825]
+['simple_cnn', 13, 'RhythmData', 0.08333333333333337, nan, 0.12411717772483825]
+loaded from disk: -data-columbia_music_speech_corpus-train-music-data-columbia_music_speech_corpus-train-speech_mir
+loaded from disk: -data-columbia_music_speech_corpus-test-music-vocals-data-columbia_music_speech_corpus-test-speech_mir
+Col test data 
+X: (40, 1, 1654, 9), Y: (40,)
+
+
+-------
+Important channels mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409} on columbia-train - MIRData
+get model: input shape [1, 1654, 9]
+input shape: (120, 1, 1654, 9)
+meaned shape: (120, 18)
+...finished fitting
+.
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 0, 'MIRData', 0.0, nan, 0.925]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 1, 'MIRData', 0.04166666666666663, nan, 0.925]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 2, 'MIRData', 0.050000000000000044, nan, 0.925]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 3, 'MIRData', 0.0, nan, 0.925]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 4, 'MIRData', 0.44999999999999996, nan, 0.925]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 5, 'MIRData', 0.0, nan, 0.925]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 6, 'MIRData', 0.06666666666666665, nan, 0.925]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 7, 'MIRData', 0.3583333333333333, nan, 0.925]
+['mv_svm--{"C": 58.315789473684205, "gamma": 0.04175318936560409}', 8, 'MIRData', 0.033333333333333326, nan, 0.925]
+
+
+-------
+Important channels mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0} on columbia-train - MIRData
+get model: input shape [1, 1654, 9]
+input shape: (120, 1, 1654, 9)
+meaned shape: (120, 18)
+...finished fitting
+.
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 0, 'MIRData', 0.0, nan, 0.95]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 1, 'MIRData', 0.008333333333333304, nan, 0.95]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 2, 'MIRData', 0.1166666666666667, nan, 0.95]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 3, 'MIRData', 0.20833333333333337, nan, 0.95]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 4, 'MIRData', 0.050000000000000044, nan, 0.95]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 5, 'MIRData', 0.06666666666666665, nan, 0.95]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 6, 'MIRData', 0.16666666666666663, nan, 0.95]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 7, 'MIRData', 0.35, nan, 0.95]
+['mv_nn--{"hidden_neurons": [200, 200, 200], "dropout": 0.0}', 8, 'MIRData', 0.33333333333333337, nan, 0.95]
+
+
+-------
+Important channels mv_linear on columbia-train - MIRData
+get model: input shape [1, 1654, 9]
+input shape: (120, 1, 1654, 9)
+meaned shape: (120, 18)
+...finished fitting
+.
+['mv_linear', 0, 'MIRData', 0.008333333333333304, 0.45395494, 0.975]
+['mv_linear', 1, 'MIRData', 0.0, 0.08079088, 0.975]
+['mv_linear', 2, 'MIRData', 0.033333333333333326, 1.4620323, 0.975]
+['mv_linear', 3, 'MIRData', 0.025000000000000022, 1.6864986, 0.975]
+['mv_linear', 4, 'MIRData', 0.033333333333333326, 1.4020731, 0.975]
+['mv_linear', 5, 'MIRData', 0.0, 1.0338858, 0.975]
+['mv_linear', 6, 'MIRData', 0.1166666666666667, 8.35383, 0.975]
+['mv_linear', 7, 'MIRData', 0.09999999999999998, 7.7170753, 0.975]
+['mv_linear', 8, 'MIRData', 0.09999999999999998, 12.104918, 0.975]
+
+
+-------
+Important channels linear on columbia-train - MIRData
+get model: input shape [1, 1654, 9]
+
+32/40 [=======================>......] - ETA: 0s
+40/40 [==============================] - 0s 9ms/step
+['linear', 0, 'MIRData', 0.1166666666666667, 8.869915, 0.3977151393890381]
+['linear', 1, 'MIRData', 0.525, 65.19698, 0.3977151393890381]
+['linear', 2, 'MIRData', 0.525, inf, 0.3977151393890381]
+['linear', 3, 'MIRData', 0.525, 96.02251, 0.3977151393890381]
+['linear', 4, 'MIRData', 0.17500000000000004, 4.656125, 0.3977151393890381]
+['linear', 5, 'MIRData', 0.14166666666666672, 4.8127184, 0.3977151393890381]
+['linear', 6, 'MIRData', 0.20833333333333337, 31.94934, 0.3977151393890381]
+['linear', 7, 'MIRData', 0.475, 431.41165, 0.3977151393890381]
+['linear', 8, 'MIRData', 0.1333333333333333, 12.345142, 0.3977151393890381]
+
+
+-------
+Important channels simple_cnn on columbia-train - MIRData
+get model: input shape [1, 1654, 9]
+
+32/40 [=======================>......] - ETA: 0s
+40/40 [==============================] - 0s 10ms/step
+['simple_cnn', 0, 'MIRData', 0.1333333333333333, 22.154825, 0.26206082105636597]
+['simple_cnn', 1, 'MIRData', 0.42500000000000004, inf, 0.26206082105636597]
+['simple_cnn', 2, 'MIRData', 0.5333333333333333, inf, 0.26206082105636597]
+['simple_cnn', 3, 'MIRData', 0.5333333333333333, inf, 0.26206082105636597]
+['simple_cnn', 4, 'MIRData', 0.033333333333333326, 2.4884844, 0.26206082105636597]
+['simple_cnn', 5, 'MIRData', 0.08333333333333337, 7.5935354, 0.26206082105636597]
+['simple_cnn', 6, 'MIRData', 0.21666666666666667, 42.322384, 0.26206082105636597]
+['simple_cnn', 7, 'MIRData', 0.4666666666666667, 359.20532, 0.26206082105636597]
+['simple_cnn', 8, 'MIRData', 0.01666666666666672, 5.2352257, 0.26206082105636597]
+...saved results

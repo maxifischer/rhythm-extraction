@@ -416,7 +416,7 @@ def important_channels(model_names=model_names):
                     y_, p_ = 1-y, 1-p
                     return np.sum( y*np.log(y/p) ) + np.sum( y_*np.log(y_/p_) )
 
-                test_acc = model.evaluate(col_test_data.X, col_test_data.Y)[0]
+                test_acc = evaluate_on_test_set(model, model_name, col_test_data)[0]
                 y = model.predict(data.X)
 
                 for channel in range(data.X.shape[-1]):
