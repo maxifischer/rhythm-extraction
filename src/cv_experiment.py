@@ -37,7 +37,7 @@ import json
 MUSIC = 1
 SPEECH = 0
 
-RUN_NAME='mv-spectro'
+RUN_NAME='mv-mir-rhythm-deep_nn'
 
 data_path = {
                 "GTZAN": {
@@ -57,8 +57,12 @@ data_path = {
 na = np.newaxis
 
 
-model_names = ["mv_linear"] # , "linear", "simple_cnn"]
+model_names = [] # , "linear", "simple_cnn"]
 
+def add_deep_nns():
+    for layers in range(5, 7):
+        model_names.append("mv_nn--{}".format(json.dumps({"hidden_neurons": [100]*layers, "dropout": 0})))
+        model_names.append("mv_nn--{}".format(json.dumps({"hidden_neurons": [100]*layers, "dropout": 0.25})))
 
 def add_mv_best():
     df = pd.read_csv("results/mv-models.csv")
@@ -517,7 +521,7 @@ def run_on_all(experiment):
     for data_name, kwargs in data_path.items():
 
         if data_name == "columbia-test": continue # don't use the test set for training
-        for Preprocessor in [SpectroData]:
+        for Preprocessor in [MIRData, RhythmData]:
             prepr_name = Preprocessor.__name__
             data = Preprocessor(**kwargs)
 
@@ -573,8 +577,9 @@ if __name__ == "__main__":
     open_csv = None
     if cmd == "cv":
         #add_svm_grid()
-        add_mv_grid()
+        #add_mv_grid()
         #add_mv_best()
+        add_deep_nns()
         print("CV for ", model_names)
         if not os.path.exists('results'):
             os.mkdir('results')
