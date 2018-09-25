@@ -664,11 +664,28 @@ if __name__ == "__main__":
             print("\n")
 
         def best_setup_latex(group_by, metric_name, result_cols):
+
+            def clean_for_latex(word, num_digits=4):
+                if isinstance(word, str):
+                    # escape _ character for latex
+                    return word.replace("_", "\\_")
+                if isinstance(word, float):
+                    # cut floating points to num_digits digits
+                    return "{:.4f}".format(word).rstrip("0")
+                else:
+                    return word
+
+            result_headers = group_by + result_cols
+            result_headers_latex_filtered = [clean_for_latex(v) for v in result_headers]
             print("==========================")
-            best_runs = results.group_by(group_by)[metric_name].idxmax()
-            print("& ".join(group_by+result_cols), "\\")
+            print("\\begin{{tabular}}{{{}}}".format("|".join(["c" for _ in result_headers])))
+            best_runs = results.groupby(group_by)[metric_name].idxmax()
+            print("& ".join(result_headers_latex_filtered), r"\\")
+            print("\\hline")
             for row in best_runs:
-                print("& ".join([row[v] for v in group_by]), "\\")
+                rw = results.iloc[row]
+                print("& ".join([clean_for_latex(rw[v]) for v in result_headers]), r"\\")
+            print("\\end{tabular}")
             print("==========================")
 
         def best_setup(group_by, metric_name, result_cols):
@@ -682,22 +699,24 @@ if __name__ == "__main__":
                 print("----\n")
             print("==========================")
 
-        rows = results.loc[(results.cv_acc==1.) & (results.test_acc==1.)]
-        print("Perfect Setups (cv_acc=test_acc=1)", rows[["data_name", "prepr_name", "model_name", "hyper_params"]])
-        """
-        #Best model for each preprocessing type
-        metric = "cv_acc"
-        best_runs = results.groupby(["data_name", "prepr_name"])[metric].idxmax()
-        for idx in best_runs:
-            row = results.iloc[idx]
-            print(row[["data_name", "prepr_name"]])
-            print(row[["model_name", "param_linvar", "cv_acc"]])
-            print("----")
-        """
-        print("****************************")
-        print("****************************")
-        print("Best model per feature set")
-        best_setup(["data_name", "prepr_name"], "cv_acc", ["model_name", "param_linvar", "cv_acc", "test_acc"])
+        print('As latex: (cvacc)')
+        best_setup_latex(["data_name"], "cv_acc", ["model_name", "cv_acc", "cv_f1", "prepr_name", "test_acc", "test_f1"])
+#         rows = results.loc[(results.cv_acc==1.) & (results.test_acc==1.)]
+#         print("Perfect Setups (cv_acc=test_acc=1)", rows[["data_name", "prepr_name", "model_name", "hyper_params"]])
+#         """
+#         #Best model for each preprocessing type
+#         metric = "cv_acc"
+#         best_runs = results.groupby(["data_name", "prepr_name"])[metric].idxmax()
+#         for idx in best_runs:
+#             row = results.iloc[idx]
+#             print(row[["data_name", "prepr_name"]])
+#             print(row[["model_name", "param_linvar", "cv_acc"]])
+#             print("----")
+#         """
+#         print("****************************")
+#         print("****************************")
+#         print("Best model per feature set")
+#         best_setup(["data_name", "prepr_name"], "cv_acc", ["model_name", "param_linvar", "cv_acc", "test_acc"])
 
 
 
