@@ -1,5 +1,7 @@
 import numpy as np
 
+NORMALIZE_CHANNELS=True
+
 def cv(X, y, method, train_fun, nfolds=10, nrepetitions=5, shuffle=True):
         evals = []
         # evals_reinit = []
@@ -32,10 +34,20 @@ def cv(X, y, method, train_fun, nfolds=10, nrepetitions=5, shuffle=True):
                         train_indices[start_idx:stop_idx] = False
                         val_indices = np.logical_not(train_indices)
 
-                        X_train = X[I[train_indices]]
+                        # slices are views, we dont want the original array to change
+                        if NORMALIZE_CHANNELS:
+                            X_cp = X.copy() 
+                        else:
+                            X_cp = X
+
+                        X_train = X_cp[I[train_indices]]
                         y_train = y[I[train_indices]]   
-                        X_val   = X[I[val_indices]]
+                        X_val   = X_cp[I[val_indices]]
                         y_val   = y[I[val_indices]]
+
+                        if NORMALIZE_CHANNELS:
+                            X_train, stddev = normalize_channels(X_train)
+                            X_val /= stddev
 
                         model = method()
                         
@@ -51,3 +63,14 @@ def cv(X, y, method, train_fun, nfolds=10, nrepetitions=5, shuffle=True):
 
 
         return [sum(y) / len(y) for y in zip(*evals)] #, np.mean(evals_reinit, axis=0)
+
+def normalize_channels(X, unbiased=False):
+    # divide each channel by its std dev
+    if unbiased:
+        ddof = 1
+    else:
+        ddof = 0
+
+    stddev = np.std(X, axis=(0,1,2), keepdims=True, ddof=ddof)
+    X /= stddev
+    return X, stddev

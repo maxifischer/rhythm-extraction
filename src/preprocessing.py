@@ -21,7 +21,7 @@ import pdb
 
 na = np.newaxis
 
-NORMALIZE_CHANNELS = True
+NORMALIZE_CHANNELS = False
 
 def crop_image_patches(X, h, w, hstride=1, wstride=1, return_2d_patches=False):
     N, H, W, D =  X.shape
