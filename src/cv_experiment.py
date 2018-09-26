@@ -37,8 +37,27 @@ import json
 MUSIC = 1
 SPEECH = 0
 
-RUN_NAME='convstyle-10reps-nospectros'
-NORMALIZE_CHANNELS=True
+RUN_NAME='mv_spectro'
+
+if RUN_NAME == 'mv_mir-rhythm':
+    NORMALIZE_CHANNELS=True
+    Preprocessors = [RhythmData, MIRData]  # , SpectroData]
+    def add_models():
+        add_mv_best()
+        add_deep_nns()
+        #add_mv_grid()
+    REPETITIONS = 10
+elif RUN_NAME == 'mv_spectro':
+    NORMALIZE_CHANNELS=True
+    Preprocessors = [SpectroData]  # , SpectroData]
+    def add_models():
+        #add_mv_best()
+        add_deep_nns()
+        add_mv_grid()
+    REPETITIONS = 10
+else:
+    raise Exception("you dont like flags or what")
+
 
 data_path = {
                 "GTZAN": {
@@ -58,7 +77,7 @@ data_path = {
 na = np.newaxis
 
 
-model_names = ["simple_cnn", "linear"]
+model_names = []
 
 def add_deep_nns():
     for layers in range(5, 7):
@@ -66,7 +85,7 @@ def add_deep_nns():
         model_names.append("mv_nn--{}".format(json.dumps({"hidden_neurons": [100]*layers, "dropout": 0.25})))
 
 def add_mv_best():
-    df = pd.read_csv("results/mv-models.csv")
+    df = pd.read_csv("../old/mv-models.csv")
     best = df.loc[df.cv_acc == 1.]
     for _, row in best.iterrows():
         model_names.append(row["model_name"]+"--"+row["hyper_params"])
@@ -188,7 +207,7 @@ def evaluate_on_test_set(model, model_name, Xtest, Ytest, return_conf_matrix=Fal
 """
 The following stuff happens for trained models
 """
-def get_trained_model(data, model_name, epochs=100, batch_size=8):
+def get_trained_model(data, model_name, retrain=False, epochs=100, batch_size=8):
     input_shape = list(data.X.shape[1:])
     model = get_model(model_name, input_shape)
     result_dir = "../results/{}--{}".format(data.__class__.__name__, model_name)
@@ -203,15 +222,20 @@ def get_trained_model(data, model_name, epochs=100, batch_size=8):
                                                 batch_size=batch_size,
                                                 epochs=epochs, verbose=0)
     try:
+        assert not retrain
         model.load_weights(weight_path)
         print("loaded model")
     except:
         print("train model")
-        train_model(model, data.X, data.Y)
+        Xtrain, stddev = normalize_channels(data.X.copy())
+        Ytrain = data.Y
+        Xtest  = col_test_data.X.copy() / stddev
+        Ytest  = col_test_data.Y
+        train_model(model, Xtrain, Ytrain)
         try:
             model.save(weight_path)
         except: pass
-    return model
+    return model, Xtrain, Ytrain, Xtest, Ytest
 
 def get_accuracy(data, model_name, model, col_test_data):
     r = cv_experiment(data, model_name, col_test_data)
@@ -452,7 +476,9 @@ def important_channels(model_names=model_names):
             for model_name in model_names:
                 print("\n\n-------\nImportant channels {} on {} - {}".format(model_name, data_name, prepr_name))
 
-                model = get_trained_model(data, model_name)
+                model, Xtrain, Ytrain, Xtest, Ytest = get_trained_model(data, model_name, retrain=True)
+
+                col_test_data.X = Xtest
 
                 def acc(p):
                     return np.mean((p>0.5)==(data.Y>0.5))
@@ -462,10 +488,10 @@ def important_channels(model_names=model_names):
                     return np.sum( y*np.log(y/p) ) + np.sum( y_*np.log(y_/p_) )
 
                 test_acc = accuracy_on_test_set(model, model_name, col_test_data)
-                y = model.predict(data.X)
+                y = model.predict(Xtrain)
 
                 for channel in range(data.X.shape[-1]):
-                    X_ = np.array(data.X)
+                    X_ = np.array(Xtrain)
                     X_[:,:,:,channel] = 0
                     p = model.predict(X_)
 
@@ -481,7 +507,7 @@ def important_channels(model_names=model_names):
 
 
 
-def cv_experiment(data, model_name, col_test_data, epochs=100, batch_size=8, nfolds=5, nrepetitions=10, norm_channels=NORMALIZE_CHANNELS):
+def cv_experiment(data, model_name, col_test_data, epochs=100, batch_size=8, nfolds=5, nrepetitions=REPETITIONS, norm_channels=NORMALIZE_CHANNELS):
     """
 
     :return: ((test accuracy on columbia test data set, f1 score on col test, test acc on colubia test positive class only, test acc on columbia test negative class only), (cv acc on train data, cv f1 score on train data, cv acc on train data pos class only, cv acc on train data neg class only))
@@ -513,7 +539,7 @@ def cv_experiment(data, model_name, col_test_data, epochs=100, batch_size=8, nfo
             Xtest  = col_test_data.X
             Ytest  = col_test_data.Y
 
-        train_model(model, Xtrain, Xtest)
+        train_model(model, Xtrain, Ytrain)
 
         test_acc = evaluate_on_test_set(model, model_name, Xtest, Ytest)
 
@@ -535,7 +561,7 @@ def run_on_all(experiment):
     for data_name, kwargs in data_path.items():
 
         if data_name == "columbia-test": continue # don't use the test set for training
-        for Preprocessor in [MIRData, RhythmData]:# [SpectroData]:
+        for Preprocessor in Preprocessors:
             prepr_name = Preprocessor.__name__
             data = Preprocessor(**kwargs)
 
@@ -590,10 +616,7 @@ if __name__ == "__main__":
 
     open_csv = None
     if cmd == "cv":
-        #add_svm_grid()
-        #add_mv_grid()
-        #add_mv_best()
-        # add_deep_nns()
+        add_models()
         print("CV for ", model_names)
         if not os.path.exists('results'):
             os.mkdir('results')
