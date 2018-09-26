@@ -10,7 +10,7 @@ import sys
 sys.path.append('../src')
 from preprocessing import RhythmData, SpectroData, MIRData
 from models import *
-from utils import cv, normalize_channels
+from utils import cv, normalize_channels, LameModelException
 import visualize
 
 import keras
@@ -37,7 +37,7 @@ import json
 MUSIC = 1
 SPEECH = 0
 
-RUN_NAME='cs_mir-rhythm'
+RUN_NAME='mv_spectro-notlame'
 NORMALIZE_CHANNELS=True
 
 if RUN_NAME == 'mv_mir-rhythm':
@@ -48,13 +48,13 @@ if RUN_NAME == 'mv_mir-rhythm':
         add_deep_nns()
         #add_mv_grid()
     REPETITIONS = 10
-elif RUN_NAME == 'mv_spectro':
+elif RUN_NAME.startswith('mv_spectro'):
     NORMALIZE_CHANNELS=True
     Preprocessors = [SpectroData]  # , SpectroData]
     def add_models():
         #add_mv_best()
-        add_deep_nns()
         add_mv_grid()
+        add_deep_nns()
     REPETITIONS = 10
 
 elif RUN_NAME == 'cs_mir-rhythm':
@@ -65,7 +65,9 @@ elif RUN_NAME == 'cs_mir-rhythm':
     REPETITIONS = 10
 
 else:
-    raise Exception("you dont like flags or what")
+    class FlagHaterException(Exception):
+        pass
+    raise FlagHaterException("you dont like flags or what")
 
 data_path = {
                 "GTZAN": {
@@ -577,7 +579,11 @@ def run_on_all(experiment):
             for model_id, model_name in enumerate(model_names):
                 print("---------------- Experiment for {} on {}({})".format(
                     model_name, Preprocessor.__name__, data_name))
-                result = experiment(data, model_name, col_test_data)
+                try:
+                    result = experiment(data, model_name, col_test_data)
+                except LameModelException as e:
+                    print(type(e), e)
+                    continue
                 split_model = model_name.split('--')
                 print('finished cv, result:')
                 print(result)

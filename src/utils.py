@@ -2,6 +2,10 @@ import numpy as np
 
 NORMALIZE_CHANNELS=True
 
+class LameModelException(Exception):
+    def __init__(self, cv_acc="bad"):
+        super().__init__("Lame model spotted: cv_acc:{}".format(cv_acc))
+
 def cv(X, y, method, train_fun, nfolds=10, nrepetitions=5, shuffle=True, norm_channels=NORMALIZE_CHANNELS):
         evals = []
         # evals_reinit = []
@@ -56,6 +60,10 @@ def cv(X, y, method, train_fun, nfolds=10, nrepetitions=5, shuffle=True, norm_ch
 
                         train_fun(model, X_train, y_train)
                         evaluation = model.evaluate(X_val, y_val, verbose=0)
+                        if len(evaluation)==5:
+                            evaluation=evaluation[1:]
+                        if evaluation[0] < 0.9:
+                            raise LameModelException(evaluation[0])
 
                         evals.append(evaluation)
                         print('cv: finished fold {}/{}'.format(f_idx+1, nfolds))
