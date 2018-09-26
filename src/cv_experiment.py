@@ -62,7 +62,7 @@ elif RUN_NAME == 'cs_mir-rhythm':
     Preprocessors = [RhythmData, MIRData]  # , SpectroData]
     def add_models():
         model_names.extend(["linear", "simple_cnn"])
-    REPETITIONS = 1
+    REPETITIONS = 10
 
 else:
     raise Exception("you dont like flags or what")
