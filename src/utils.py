@@ -1,6 +1,8 @@
 import numpy as np
 
-def cv(X, y, method, train_fun, nfolds=10, nrepetitions=5, shuffle=True, norm_channels=True):
+NORMALIZE_CHANNELS=True
+
+def cv(X, y, method, train_fun, nfolds=10, nrepetitions=5, shuffle=True, norm_channels=NORMALIZE_CHANNELS):
         evals = []
         # evals_reinit = []
         N = X.shape[0]
