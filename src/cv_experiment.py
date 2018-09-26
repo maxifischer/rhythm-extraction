@@ -10,7 +10,7 @@ import sys
 sys.path.append('../src')
 from preprocessing import RhythmData, SpectroData, MIRData, NORMALIZE_CHANNELS
 from models import *
-from utils import cv
+from utils import cv, normalize_channels
 import visualize
 
 import keras
@@ -37,7 +37,8 @@ import json
 MUSIC = 1
 SPEECH = 0
 
-RUN_NAME='mv-mir-rhythm-deep_nn'
+RUN_NAME='convstyle-10reps-nospectros'
+NORMALIZE_CHANNELS=True
 
 data_path = {
                 "GTZAN": {
@@ -57,7 +58,7 @@ data_path = {
 na = np.newaxis
 
 
-model_names = [] # , "linear", "simple_cnn"]
+model_names = ["simple_cnn", "linear"]
 
 def add_deep_nns():
     for layers in range(5, 7):
@@ -108,6 +109,8 @@ def add_svm_grid():
 
 def train_test_experiment(data, model_name, col_test_data, epochs=100, batch_size=8):
 
+    print('ATTENTION: unnormalized stuff working here!!!!!!!!!!!!')
+
     input_shape = data.X.shape[1:]
     model = get_model(model_name, input_shape)
 
@@ -150,32 +153,32 @@ def accuracy_on_test_set(model, model_name, col_test_data):
         Y = np.reshape(col_test_data.Y, P.shape)
         return np.mean((P > 0.5) == (Y > 0.5))
 
-def evaluate_on_test_set(model, model_name, col_test_data, return_conf_matrix=False):
+def evaluate_on_test_set(model, model_name, Xtest, Ytest, return_conf_matrix=False):
     try:
 
-        P = model.predict(col_test_data.X)
-        Y = np.reshape(col_test_data.Y, P.shape)
+        P = model.predict(Xtest)
+        Y = np.reshape(Ytest, P.shape)
 
         if return_conf_matrix:
-            test_acc = confusion_matrix(col_test_data.Y, P)
+            test_acc = confusion_matrix(Ytest, P)
         else:
-            test_acc = model.evaluate(col_test_data.X, Y)
+            test_acc = model.evaluate(Xtest, Y)
     except ValueError:
         # if the test set has a different time length then the train set, try to reshape the model and test then
-        test_input_shape = col_test_data.X.shape[1:]
+        test_input_shape = Xtest.shape[1:]
         model_weights = model.get_weights()
         model = reshape_keras_conv_input(model_name, test_input_shape, model_weights)
 
-        P = model.predict(col_test_data.X)
-        Y = np.reshape(col_test_data.Y, P.shape)
+        P = model.predict(Xtest)
+        Y = np.reshape(Ytest, P.shape)
 
         if return_conf_matrix:
-            test_acc = confusion_matrix(col_test_data.Y, P)
+            test_acc = confusion_matrix(Ytest, P)
         else:
-            test_acc = model.evaluate(col_test_data.X, Y)
+            test_acc = model.evaluate(Xtest, Y)
     if test_acc[0] < 0.5:
         print("this is fucked:", model_name, test_acc[0])
-        pdb.set_trace()
+        # pdb.set_trace()
         print("P", P.shape)
         print("Y", Y.shape)
 
@@ -478,7 +481,7 @@ def important_channels(model_names=model_names):
 
 
 
-def cv_experiment(data, model_name, col_test_data, epochs=100, batch_size=8, nfolds=5, nrepetitions=1):
+def cv_experiment(data, model_name, col_test_data, epochs=100, batch_size=8, nfolds=5, nrepetitions=10, norm_channels=NORMALIZE_CHANNELS):
     """
 
     :return: ((test accuracy on columbia test data set, f1 score on col test, test acc on colubia test positive class only, test acc on columbia test negative class only), (cv acc on train data, cv f1 score on train data, cv acc on train data pos class only, cv acc on train data neg class only))
@@ -495,13 +498,24 @@ def cv_experiment(data, model_name, col_test_data, epochs=100, batch_size=8, nfo
                                         batch_size=batch_size,
                                         epochs=epochs, verbose=0)
 
-    cvacc = cv(data.X, data.Y, get_fresh_model, train_model, nfolds=nfolds, nrepetitions=nrepetitions)
+    cvacc = cv(data.X, data.Y, get_fresh_model, train_model, nfolds=nfolds, nrepetitions=nrepetitions, norm_channels=norm_channels)
 
     test_acc = None
     if col_test_data is not None:
-        train_model(model, data.X, data.Y)
+        if norm_channels:
+            Xtrain, stddev = normalize_channels(data.X.copy())
+            Ytrain = data.Y
+            Xtest  = col_test_data.X.copy() / stddev
+            Ytest  = col_test_data.Y
+        else:
+            Xtrain = data.X
+            Ytrain = data.Y
+            Xtest  = col_test_data.X
+            Ytest  = col_test_data.Y
 
-        test_acc = evaluate_on_test_set(model, model_name, col_test_data)
+        train_model(model, Xtrain, Xtest)
+
+        test_acc = evaluate_on_test_set(model, model_name, Xtest, Ytest)
 
     print('cvacc output is of length {}'.format(len(cvacc)))
 
@@ -521,7 +535,7 @@ def run_on_all(experiment):
     for data_name, kwargs in data_path.items():
 
         if data_name == "columbia-test": continue # don't use the test set for training
-        for Preprocessor in [MIRData, RhythmData]:
+        for Preprocessor in [MIRData, RhythmData]:# [SpectroData]:
             prepr_name = Preprocessor.__name__
             data = Preprocessor(**kwargs)
 
@@ -579,7 +593,7 @@ if __name__ == "__main__":
         #add_svm_grid()
         #add_mv_grid()
         #add_mv_best()
-        add_deep_nns()
+        # add_deep_nns()
         print("CV for ", model_names)
         if not os.path.exists('results'):
             os.mkdir('results')
@@ -718,8 +732,14 @@ if __name__ == "__main__":
 #         print("Best model per feature set")
 #         best_setup(["data_name", "prepr_name"], "cv_acc", ["model_name", "param_linvar", "cv_acc", "test_acc"])
 
-
-
+        print('Best run, without linvar option')
+        results_no_mv_post = results[results["param_linvar"] == False].groupby("data_name")["cv_acc"].idxmax()
+        for row in results_no_mv_post:
+            v = results.iloc[row]
+            # print("{}: {} on {} with {} ({}, {})".format(v["data_name"], v["model_name"], v["prepr_name"], v["cv_acc"],
+            #                                          "normalized" if v["is_normalized"] == 1 else "unnorm.",
+            #                                          "linvar" if v["param_linvar"] else "mean"   ))
+            print(v)
 
 
         print("****************************")
