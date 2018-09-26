@@ -8,7 +8,7 @@ import madmom
 
 import sys
 sys.path.append('../src')
-from preprocessing import RhythmData, SpectroData, MIRData, NORMALIZE_CHANNELS
+from preprocessing import RhythmData, SpectroData, MIRData
 from models import *
 from utils import cv, normalize_channels
 import visualize
@@ -37,7 +37,7 @@ import json
 MUSIC = 1
 SPEECH = 0
 
-RUN_NAME='convstyle-10reps-nospectros'
+RUN_NAME='convstyle-10reps-nospectros-correcttest'
 NORMALIZE_CHANNELS=True
 
 data_path = {

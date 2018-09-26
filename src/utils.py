@@ -1,8 +1,6 @@
 import numpy as np
 
-NORMALIZE_CHANNELS=True
-
-def cv(X, y, method, train_fun, nfolds=10, nrepetitions=5, shuffle=True):
+def cv(X, y, method, train_fun, nfolds=10, nrepetitions=5, shuffle=True, norm_channels=True):
         evals = []
         # evals_reinit = []
         N = X.shape[0]
@@ -35,7 +33,7 @@ def cv(X, y, method, train_fun, nfolds=10, nrepetitions=5, shuffle=True):
                         val_indices = np.logical_not(train_indices)
 
                         # slices are views, we dont want the original array to change
-                        if NORMALIZE_CHANNELS:
+                        if norm_channels:
                             X_cp = X.copy() 
                         else:
                             X_cp = X
@@ -45,7 +43,7 @@ def cv(X, y, method, train_fun, nfolds=10, nrepetitions=5, shuffle=True):
                         X_val   = X_cp[I[val_indices]]
                         y_val   = y[I[val_indices]]
 
-                        if NORMALIZE_CHANNELS:
+                        if norm_channels:
                             X_train, stddev = normalize_channels(X_train)
                             X_val /= stddev
 
