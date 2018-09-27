@@ -1,0 +1,3 @@
+cv_acc,cv_acc_nc,cv_acc_pc,cv_f1,data_name,hyper_params,is_normalized,model_name,param_c,param_gamma,param_linvar,prepr_name,test_acc,test_acc_nc,test_acc_pc,test_f1
+0.9933333313465118,0.9970833337306977,0.9902380955219269,0.9926865100860596,columbia-train,,1,simple_cnn,,,,SpectroData,0.95,0.9066666722297668,1.0,0.9485713720321656
+0.9429846060276031,0.9484092903137207,0.9385194957256318,0.9411693120002746,GTZAN,,1,simple_cnn,,,,SpectroData,0.95,0.9066666722297668,1.0,0.9485713720321656

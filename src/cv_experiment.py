@@ -37,7 +37,7 @@ import json
 MUSIC = 1
 SPEECH = 0
 
-RUN_NAME='cs_mir-rhythm'
+RUN_NAME='cs_linear_rhythm'
 NORMALIZE_CHANNELS=True
 
 if RUN_NAME == 'mv_mir-rhythm':
@@ -57,12 +57,36 @@ elif RUN_NAME == 'mv_spectro':
         add_mv_grid()
     REPETITIONS = 10
 
+# convolution-style models
+
 elif RUN_NAME == 'cs_mir-rhythm':
     NORMALIZE_CHANNELS=True
     Preprocessors = [RhythmData, MIRData]  # , SpectroData]
     def add_models():
         model_names.extend(["linear", "simple_cnn"])
     REPETITIONS = 10
+
+elif RUN_NAME == 'cs_mir-spectro':
+    NORMALIZE_CHANNELS=True
+    Preprocessors = [SpectroData]
+    def add_models():
+        model_names.extend(["linear", "simple_cnn"])
+    REPETITIONS = 10
+
+elif RUN_NAME == 'cs_cnn-spectro':
+    NORMALIZE_CHANNELS=True
+    Preprocessors = [SpectroData]
+    def add_models():
+        model_names.extend(["simple_cnn"])
+    REPETITIONS = 10
+
+elif RUN_NAME == 'cs_linear-spectro':
+    NORMALIZE_CHANNELS=True
+    Preprocessors = [SpectroData]
+    def add_models():
+        model_names.extend(["linear"])
+    REPETITIONS = 10
+
 
 else:
     raise Exception("you dont like flags or what")
