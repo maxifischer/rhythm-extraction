@@ -24,6 +24,7 @@ def cv(X, y, method, train_fun, nfolds=10, nrepetitions=5, shuffle=True, norm_ch
                 fold_rest = N %  nfolds
 
                 # FOLD
+                val_accs = []
                 for f_idx in range(nfolds):
 
                         # split in train and test folds
@@ -62,7 +63,8 @@ def cv(X, y, method, train_fun, nfolds=10, nrepetitions=5, shuffle=True, norm_ch
                         evaluation = model.evaluate(X_val, y_val, verbose=0)
                         if len(evaluation)==5:
                             evaluation=evaluation[1:]
-                        if evaluation[0] < 0.9:
+                        val_accs.append(evaluation[0])
+                        if np.mean(val_accs) < 0.85:
                             raise LameModelException(evaluation[0])
 
                         evals.append(evaluation)
