@@ -37,7 +37,7 @@ import json
 MUSIC = 1
 SPEECH = 0
 
-RUN_NAME='cs_linear_rhythm'
+RUN_NAME='cs_mir-rhythm'
 NORMALIZE_CHANNELS=True
 
 if RUN_NAME == 'mv_mir-rhythm':
@@ -66,7 +66,7 @@ elif RUN_NAME == 'cs_mir-rhythm':
         model_names.extend(["linear", "simple_cnn"])
     REPETITIONS = 10
 
-elif RUN_NAME == 'cs_mir-spectro':
+elif RUN_NAME == 'cs_spectro':
     NORMALIZE_CHANNELS=True
     Preprocessors = [SpectroData]
     def add_models():
