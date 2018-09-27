@@ -6,7 +6,7 @@ class LameModelException(Exception):
     def __init__(self, cv_acc="bad"):
         super().__init__("Lame model spotted: cv_acc:{}".format(cv_acc))
 
-def cv(X, y, method, train_fun, nfolds=10, nrepetitions=5, shuffle=True, norm_channels=NORMALIZE_CHANNELS):
+def cv(X, y, method, train_fun, nfolds=10, nrepetitions=5, shuffle=True, norm_channels=NORMALIZE_CHANNELS,lame_model_threshold=0.):
         evals = []
         # evals_reinit = []
         N = X.shape[0]
@@ -62,7 +62,7 @@ def cv(X, y, method, train_fun, nfolds=10, nrepetitions=5, shuffle=True, norm_ch
                         evaluation = model.evaluate(X_val, y_val, verbose=0)
                         if len(evaluation)==5:
                             evaluation=evaluation[1:]
-                        if evaluation[0] < 0.9:
+                        if evaluation[0] < lame_model_threshold:
                             raise LameModelException(evaluation[0])
 
                         evals.append(evaluation)
