@@ -251,7 +251,7 @@ def evaluate_on_test_set(model, model_name, Xtest, Ytest, return_conf_matrix=Fal
 """
 The following stuff happens for trained models
 """
-def get_trained_model(data, model_name, retrain=False, epochs=100, batch_size=8):
+def get_trained_model(data, model_name, col_test_data=None, retrain=False, epochs=100, batch_size=8):
     input_shape = list(data.X.shape[1:])
     model = get_model(model_name, input_shape)
     result_dir = "../results/{}--{}".format(data.__class__.__name__, model_name)
@@ -265,16 +265,22 @@ def get_trained_model(data, model_name, retrain=False, epochs=100, batch_size=8)
     train_model = lambda model, X, Y: model.fit(X, Y,
                                                 batch_size=batch_size,
                                                 epochs=epochs, verbose=0)
+
+    Xtrain, stddev = normalize_channels(data.X.copy())
+    Ytrain = data.Y
+    if col_test_data:
+        Xtest = col_test_data.X.copy() / stddev
+        Ytest = col_test_data.Y
+    else:
+        Xtest, Ytest=None, None
+
     try:
         assert not retrain
         model.load_weights(weight_path)
         print("loaded model")
     except:
         print("train model")
-        Xtrain, stddev = normalize_channels(data.X.copy())
-        Ytrain = data.Y
-        Xtest  = col_test_data.X.copy() / stddev
-        Ytest  = col_test_data.Y
+
         train_model(model, Xtrain, Ytrain)
         try:
             model.save(weight_path)
