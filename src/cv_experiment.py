@@ -57,10 +57,7 @@ if RUN_NAME == 'mv_mir-rhythm':
 elif RUN_NAME == 'best-models-cross-dataset':
     NORMALIZE_CHANNELS=True
     Preprocessors = [RhythmData, MIRData, SpectroData]
-    def add_models():
-        # TODO: add best models, Niels
-        # add_best_models()
-        model_names.append('mv_linear')
+    add_models = lambda: add_best_models_for_cross_dataset()
     REPETITIONS = -1
     use_whole_columbia_as_test = True
 
@@ -152,10 +149,15 @@ def add_mv_best():
 
 def add_best_models_for_cross_dataset():
     results = pd.read_csv("results/merged.csv")
+    results = results.loc[results.data_name=="GTZAN"].reset_index()
     for row_id in results.groupby(["data_name", "prepr_name", "model_name"])["cv_acc"].idxmax().values:
         row = results.iloc[row_id]
         if row["model_name"] in ["mv_nn", "mv_svm"]:
             model_names.append(row["model_name"] + "--" + row["hyper_params"])
+
+    print('JENE MODELS:')
+    print(model_names)
+    print(' es sind viele: {}'.format(len(model_names)))
 
 
 
