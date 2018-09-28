@@ -11,6 +11,10 @@ from matplotlib import pyplot as plt
 - falsch klassifizierte dinger speichern und gucken ob es die gleichen sind
 """
 
+MIR_names = ["spectral\nflux", "super\nflux", "complex\nflux", "spectral\ncentroid", "spectral\nbandwidth", "spectral\nflatness", "spectral\nrolloff", "rmse", "0-cross\nrate"]
+Rhythm_names = ["Spectral\nOnset", "RNNOnset", "CNNOnset", "SpectralOnset", "RNNDownBeat"]
+Rhythm_names += ["RNNBeat-{}".format(i) for i in range(9)]
+
 
 def important_channels_single_setup(model_name, Preprocessor):
     MUSIC = 1
@@ -50,26 +54,56 @@ def important_channels_single_setup(model_name, Preprocessor):
         effects = []
         for channel in range(data.X.shape[-1]):
             X_ = np.array(Xtrain)
-            X_[:,:,:,channel] = 0
+            X_[:,:,:,channel] = np.mean(X_[:,:,:,channel])
             p = model.predict(X_)
             effects.append(1-np.mean((p>0.5)==(y>0.5)))
 
-        plt.bar(list(range(len(effects))), effects)
-        plt.title("{} on {}".format(model_name.split("--")[0], prepr_name))
-        plt.savefig("effect-{}-{}.png".format(model_name.split("--")[0], prepr_name))
-        plt.clf()
+        mname = model_name.split("--")[0]
+        color = "g" if mname == "mv_nn" else "r"
+        ticks = np.array(list(range(len(effects))), dtype=np.float64)
+        if mname == "mv_nn":
+            pos =  ticks + 0.2
+        else:
+            pos=ticks
+
+        if prepr_name == "RhythmData":
+            feature_names = Rhythm_names
+        else:
+            feature_names = MIR_names
+
+        plt.bar(pos, effects, alpha=0.5, label=mname, color=color, width=0.4)
+        plt.title(prepr_name)
+
+        plt.xticks(ticks, feature_names, rotation='vertical')
+
+        return data
+
+
 
 def eval_best_models():
     r = pd.read_csv("results/merged.csv")
 
+    plt.figure(figsize=(6, 4))
+    #plt.subplot(211)
     nn = r.loc[(r.model_name=="mv_nn") & (r.data_name=="GTZAN") & (r.prepr_name=="RhythmData")]["cv_acc"].idxmax()
     nn = r.iloc[nn]
     important_channels_single_setup(nn["model_name"]+"--"+nn["hyper_params"], RhythmData)
 
     svm = r.loc[(r.model_name=="mv_svm") & (r.data_name=="GTZAN") & (r.prepr_name=="RhythmData")]["cv_acc"].idxmax()
     svm = r.iloc[svm]
-    important_channels_single_setup(svm["model_name"]+"--"+svm["hyper_params"], RhythmData)
+    data = important_channels_single_setup(svm["model_name"]+"--"+svm["hyper_params"], RhythmData)
+    plt.legend()
 
+    #ax = plt.subplot(212)
+    #mv_linear_weight_plot(data, RhythmData)
+    #ax.xaxis.tick_top()
+
+    plt.tight_layout()
+    plt.savefig("importance-rhythm.png")
+    plt.clf()
+
+    plt.figure(figsize=(6, 4))
+    #plt.subplot(211)
     nn = r.loc[(r.model_name == "mv_nn") & (r.data_name == "GTZAN") & (r.prepr_name == "MIRData")][
         "cv_acc"].idxmax()
     nn = r.iloc[nn]
@@ -78,7 +112,16 @@ def eval_best_models():
     svm = r.loc[(r.model_name == "mv_svm") & (r.data_name == "GTZAN") & (r.prepr_name == "MIRData")][
         "cv_acc"].idxmax()
     svm = r.iloc[svm]
-    important_channels_single_setup(svm["model_name"] + "--" + svm["hyper_params"], MIRData)
+    data = important_channels_single_setup(svm["model_name"] + "--" + svm["hyper_params"], MIRData)
+    plt.legend()
+
+    #ax = plt.subplot(212)
+    #mv_linear_weight_plot(data, MIRData)
+    #ax.xaxis.tick_top()
+
+    plt.tight_layout()
+    plt.savefig("importance-mir.png")
+    plt.clf()
 
 def eval():
     r = pd.read_csv(sys.argv[1])
@@ -95,10 +138,6 @@ def eval():
 
     important_channels(model_names)
 
-
-MIR_names = ["M-spectral-flux", "M-super-flux", "M-complex-flux", "M-spectral_centroid", "M-spectral_bandwidth", "M-spectral_flatness", "M-spectral_rolloff", "M-rmse", "M-zero_crossing_rate"]
-Rhythm_names = ["R-SpectralOnsetProcessor", "R-RNNOnsetProcessor", "R-CNNOnsetProcessor", "R-SpectralOnsetProcessor", "R-RNNDownBeatProcessor"]
-Rhythm_names += ["R-RNNBeatProcessor-{}".format(i) for i in range(9)]
 
 def read():
     df = pd.read_csv("effect_of_channels.csv")
@@ -151,31 +190,25 @@ def read():
     importance_on_models(["simple_cnn", "linear"], "conv-models")
 
 
-def mv_linear_weight_plot():
+def mv_linear_weight_plot(data, Preprocessor):
 
-    for data_name, kwargs in data_path.items():
+    prepr_name = Preprocessor.__name__
+    model, X, _, _, _ = get_trained_model(data, "mv_linear", retrain=True)
 
-        # if data_name == "columbia-test": continue  # don't use the test set for training
-        if not data_name == "GTZAN": continue
-        for Preprocessor in [RhythmData, MIRData]:
-            prepr_name = Preprocessor.__name__
-            data = Preprocessor(**kwargs)
-            model, X, _, _, _ = get_trained_model(data, "mv_linear", retrain=True)
+    w = np.squeeze(model.model.layers[0].get_weights()[0])
+    weights = np.reshape(w, [-1, 2])
+    w_mean = weights[:,0]
+    w_var = weights[:,1]
+    X_mean = np.squeeze(np.mean(X, axis=(0,1,2,)))
+    r_mean = w_mean
 
-            w = np.squeeze(model.model.layers[0].get_weights()[0])
-            weights = np.reshape(w, [-1, 2])
-            w_mean = weights[:,0]
-            w_var = weights[:,1]
-            X_mean = np.squeeze(np.mean(X, axis=(0,1,2,)))
-            r_mean = w_mean
-
-
-            plt.bar(list(range(len(r_mean))), r_mean, label="Mean")
-            plt.bar(list(range(len(r_mean))), w_var, label="Var", alpha=0.5)
-            plt.title(prepr_name)
-            plt.legend()
-            plt.savefig("weights-mv-linear-{}.png".format(prepr_name))
-            plt.clf()
+    r_var = np.where((r_mean>0)==(w_var>0), r_mean+w_var, w_var)
+    ticks = list(range(len(r_mean)))
+    plt.bar(ticks, w_var, label="Var", width=0.4)
+    plt.bar(ticks, r_mean, label="Mean", width=0.4)
+    plt.plot([0, len(ticks)-1], [0,0], color="black", linewidth=0.5)
+    plt.xticks(ticks, [""]*len(ticks))
+    plt.legend()
 
 
 #mv_linear_weight_plot()
