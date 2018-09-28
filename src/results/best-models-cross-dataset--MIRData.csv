@@ -1,0 +1,6 @@
+cv_acc,cv_acc_nc,cv_acc_pc,cv_f1,data_name,hyper_params,is_normalized,model_name,param_c,param_gamma,param_linvar,prepr_name,test_acc,test_acc_nc,test_acc_pc,test_f1
+-666.0,-666.0,-666.0,-666.0,GTZAN,"{""hidden_neurons"": [50, 50], ""dropout"": 0.0}",1,mv_nn,,,,MIRData,0.94375,0.95,0.9375,0.9433962264150944
+-666.0,-666.0,-666.0,-666.0,GTZAN,"{""C"": 47.89473684210526, ""gamma"": 0.018873918221350997}",1,mv_svm,,,,MIRData,0.975,0.95,1.0,0.975609756097561
+-666.0,-666.0,-666.0,-666.0,GTZAN,,1,simple_cnn,,,,MIRData,0.98125,0.975,0.9894736886024476,0.9828298568725586
+-666.0,-666.0,-666.0,-666.0,GTZAN,,1,linear,,,,MIRData,0.85,0.886315393447876,0.8079044699668885,0.8396759033203125
+-666.0,-666.0,-666.0,-666.0,GTZAN,,1,mv_linear,,,,MIRData,0.88125,0.875,0.8875,0.8819875776397514

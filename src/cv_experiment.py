@@ -37,7 +37,7 @@ import json
 MUSIC = 1
 SPEECH = 0
 
-RUN_NAME='best-models-cross-dataset'
+RUN_NAME='best-models-cross-dataset--SpectroData'
 NORMALIZE_CHANNELS=True
 
 # stop cv iterations and do not save the results if cvacc below threshold
@@ -54,10 +54,17 @@ if RUN_NAME == 'mv_mir-rhythm':
         #add_mv_grid()
     REPETITIONS = 10
 
-elif RUN_NAME == 'best-models-cross-dataset':
+elif RUN_NAME.startswith('best-models-cross-dataset'):
+    prepr_name = RUN_NAME.split("--")[1]
     NORMALIZE_CHANNELS=True
-    Preprocessors = [RhythmData, MIRData, SpectroData]
-    add_models = lambda: add_best_models_for_cross_dataset()
+    if prepr_name == "RhythmData":
+        Preprocessors = [RhythmData]
+    elif prepr_name == "MIRData":
+        Preprocessors = [MIRData]
+    else:
+        Preprocessors = [SpectroData]
+
+    add_models = lambda: add_best_models_for_cross_dataset(prepr_name)
     REPETITIONS = -1
     use_whole_columbia_as_test = True
 
@@ -143,18 +150,18 @@ def add_mv_best():
     best = df.loc[df.cv_acc == 1.]
     for _, row in best.iterrows():
         model_names.append(row["model_name"]+"--"+row["hyper_params"])
-    
+
     print('added bestparam models, now we have {} models'.format(len(model_names)))
     print(model_names)
 
-def add_best_models_for_cross_dataset():
+def add_best_models_for_cross_dataset(prepr_name):
     results = pd.read_csv("results/merged.csv")
-    results = results.loc[results.data_name=="GTZAN"].reset_index()
+    results = results.loc[(results.data_name=="GTZAN") & (results.prepr_name==prepr_name)].reset_index()
     for row_id in results.groupby(["data_name", "prepr_name", "model_name"])["cv_acc"].idxmax().values:
         row = results.iloc[row_id]
         if row["model_name"] in ["mv_nn", "mv_svm"]:
             model_names.append(row["model_name"] + "--" + row["hyper_params"])
-
+    model_names.extend(["simple_cnn", "linear", "mv_linear"])
     print('JENE MODELS:')
     print(model_names)
     print(' es sind viele: {}'.format(len(model_names)))
@@ -574,9 +581,11 @@ def cv_experiment(data, model_name, col_test_data, epochs=100, batch_size=8, nfo
 
     K.clear_session()
     if len(cvacc) == 5:
-        result = (test_acc[1:], cvacc[1:])
-    else:
-        result = test_acc, cvacc
+        cvacc = cvacc[1:]
+    if len(test_acc) == 5:
+        test_acc = test_acc[1:]
+
+    result = (test_acc, cvacc)
     print(">>>>>>>>", model_name, cvacc[0])
     return result
 

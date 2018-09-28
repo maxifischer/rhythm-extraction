@@ -1,0 +1,6 @@
+cv_acc,cv_acc_nc,cv_acc_pc,cv_f1,data_name,hyper_params,is_normalized,model_name,param_c,param_gamma,param_linvar,prepr_name,test_acc,test_acc_nc,test_acc_pc,test_f1
+-666.0,-666.0,-666.0,-666.0,GTZAN,"{""hidden_neurons"": [100], ""dropout"": 0.5}",1,mv_nn,,,,SpectroData,0.98125,0.9875,0.975,0.9811320754716981
+-666.0,-666.0,-666.0,-666.0,GTZAN,"{""C"": 68.73684210526315, ""gamma"": 0.0038566204211634724}",1,mv_svm,,,,SpectroData,0.96875,0.9625,0.975,0.9689440993788819
+-666.0,-666.0,-666.0,-666.0,GTZAN,,1,simple_cnn,,,,SpectroData,0.9875,0.9846153855323792,0.9882352948188782,0.9888111591339112
+-666.0,-666.0,-666.0,-666.0,GTZAN,,1,linear,,,,SpectroData,0.7875,0.8098779082298279,0.7778097271919251,0.7852458834648133
+-666.0,-666.0,-666.0,-666.0,GTZAN,,1,mv_linear,,,,SpectroData,0.98125,0.9875,0.975,0.9811320754716981
