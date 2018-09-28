@@ -136,6 +136,14 @@ def add_mv_best():
 
     print(model_names)
 
+def add_best_models_for_cross_dataset():
+    results = pd.read_csv("results/merged.csv")
+    for row_id in results.groupby(["data_name", "prepr_name", "model_name"])["cv_acc"].idxmax().values:
+        row = results.iloc[row_id]
+        if row["model_name"] in ["mv_nn", "mv_svm"]:
+            model_names.append(row["model_name"] + "--" + row["hyper_params"])
+
+
 
 def add_mv_grid():
 
