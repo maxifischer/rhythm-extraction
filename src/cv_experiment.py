@@ -501,57 +501,6 @@ def analyze_trained_models():
                 visualize_filter(data, model_name, model, col_test_data, music_sample, speech_sample)
 
 
-def important_channels(model_names=model_names):
-    MUSIC = 1
-    SPEECH = 0
-
-    results = pd.DataFrame(columns=["data_name", "model", "channel", "preprocesssing", "effect_acc", "effect_kldiv", "test_acc"])
-    row_id = 0 # counter for where to store the results
-
-    for data_name, kwargs in data_path.items():
-
-        # if data_name == "columbia-test": continue  # don't use the test set for training
-        if not data_name == "GTZAN": continue
-        for Preprocessor in [RhythmData, MIRData]:
-            prepr_name = Preprocessor.__name__
-            data = Preprocessor(**kwargs)
-
-            col_test_data = Preprocessor(**data_path["columbia-test"])
-
-            music_sample = random.choice(col_test_data.X[col_test_data.Y == MUSIC])
-            speech_sample = random.choice(col_test_data.X[col_test_data.Y != MUSIC])
-
-            print("Col test data \nX: {}, Y: {}".format(col_test_data.X.shape, col_test_data.Y.shape))
-
-            for model_name in model_names:
-                print("\n\n-------\nImportant channels {} on {} - {}".format(model_name, data_name, prepr_name))
-
-                model, Xtrain, Ytrain, Xtest, Ytest = get_trained_model(data, model_name, retrain=True)
-
-                col_test_data.X = Xtest
-
-                def acc(p):
-                    return np.mean((p>0.5)==(data.Y>0.5))
-
-                def kl_div(y, p):
-                    y_, p_ = 1-y, 1-p
-                    return np.sum( y*np.log(y/p) ) + np.sum( y_*np.log(y_/p_) )
-
-                test_acc = accuracy_on_test_set(model, model_name, col_test_data)
-                y = model.predict(Xtrain)
-
-                for channel in range(data.X.shape[-1]):
-                    X_ = np.array(Xtrain)
-                    X_[:,:,:,channel] = 0
-                    p = model.predict(X_)
-
-                    values = [data_name, model_name, channel, prepr_name, 1-np.mean((p>0.5)==(y>0.5)), kl_div(y, p), test_acc]
-                    results.loc[row_id] = values
-                    row_id += 1
-                    print(values)
-
-    results.to_csv("effect_of_channels.csv", index=False)
-    print('...saved results')
 
 
 
@@ -853,17 +802,9 @@ if __name__ == "__main__":
             print("--------")
 
 
-
-
-
-
-
-
         #print(results)
     elif cmd == "analyze_trained":
         analyze_trained_models()
-    elif cmd == "important_channels":
-        important_channels()
     elif cmd == "channel_activation":
         visualize_channel_activation()
     elif cmd == "is_normalized":
