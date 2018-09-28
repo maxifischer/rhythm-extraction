@@ -37,11 +37,13 @@ import json
 MUSIC = 1
 SPEECH = 0
 
-RUN_NAME='mv_linear-all'
+RUN_NAME='best-models-cross-dataset'
 NORMALIZE_CHANNELS=True
 
 # stop cv iterations and do not save the results if cvacc below threshold
 LAME_MODEL_THRESHOLD = 0.
+
+use_whole_columbia_as_test = False
 
 if RUN_NAME == 'mv_mir-rhythm':
     NORMALIZE_CHANNELS=True
@@ -51,6 +53,17 @@ if RUN_NAME == 'mv_mir-rhythm':
         add_deep_nns()
         #add_mv_grid()
     REPETITIONS = 10
+
+elif RUN_NAME == 'best-models-cross-dataset':
+    NORMALIZE_CHANNELS=True
+    Preprocessors = [RhythmData, MIRData, SpectroData]
+    def add_models():
+        # TODO: add best models, Niels
+        # add_best_models()
+        model_names.append('mv_linear')
+    REPETITIONS = -1
+    use_whole_columbia_as_test = True
+
 elif RUN_NAME.startswith('mv_spectro'):
     NORMALIZE_CHANNELS=True
     Preprocessors = [SpectroData]  # , SpectroData]
@@ -129,11 +142,12 @@ def add_deep_nns():
         model_names.append("mv_nn--{}".format(json.dumps({"hidden_neurons": [100]*layers, "dropout": 0.25})))
 
 def add_mv_best():
-    df = pd.read_csv("../old/mv-models.csv")
+    df = pd.read_csv("results/saves/mv-models.csv")
     best = df.loc[df.cv_acc == 1.]
     for _, row in best.iterrows():
         model_names.append(row["model_name"]+"--"+row["hyper_params"])
-
+    
+    print('added bestparam models, now we have {} models'.format(len(model_names)))
     print(model_names)
 
 
@@ -149,9 +163,6 @@ def add_mv_grid():
         model_names.append("mv_nn--{}".format(json.dumps(
             {"hidden_neurons": [num_neurons] * num_layers,
              "dropout": dropout})))
-
-
-
 
 
 # SVM gridsearch values
@@ -221,6 +232,8 @@ def evaluate_on_test_set(model, model_name, Xtest, Ytest, return_conf_matrix=Fal
 
         P = model.predict(Xtest)
         Y = np.reshape(Ytest, P.shape)
+
+        print('Test set shape: {}'.format(Ytest.shape))
 
         if return_conf_matrix:
             test_acc = confusion_matrix(Ytest, P)
@@ -568,7 +581,12 @@ def cv_experiment(data, model_name, col_test_data, epochs=100, batch_size=8, nfo
                                         batch_size=batch_size,
                                         epochs=epochs, verbose=0)
 
-    cvacc = cv(data.X, data.Y, get_fresh_model, train_model, nfolds=nfolds, nrepetitions=nrepetitions, norm_channels=norm_channels, lame_model_threshold=LAME_MODEL_THRESHOLD)
+    if nrepetitions > 0:
+
+        cvacc = cv(data.X, data.Y, get_fresh_model, train_model, nfolds=nfolds, nrepetitions=nrepetitions, norm_channels=norm_channels, lame_model_threshold=LAME_MODEL_THRESHOLD)
+    else:
+        cvacc = [-666, -666, -666, -666] 
+    
 
     test_acc = None
     if col_test_data is not None:
@@ -605,11 +623,20 @@ def run_on_all(experiment):
     for data_name, kwargs in data_path.items():
 
         if data_name == "columbia-test": continue # don't use the test set for training
+        elif data_name == "columbia-train" and use_whole_columbia_as_test: continue # for cross-set mode don't train on columbia
         for Preprocessor in Preprocessors:
             prepr_name = Preprocessor.__name__
             data = Preprocessor(**kwargs)
 
             col_test_data = Preprocessor(**data_path["columbia-test"])
+            if use_whole_columbia_as_test:
+                print('USING THE WHOLE COLUMBIA AS TEST SET')
+                # use whole colubmia dataset as test set (for cross-set evaluation)
+                col_train_data = Preprocessor(**data_path["columbia-train"])
+                col_test_data.X = np.vstack([col_test_data.X, col_train_data.X])
+                col_test_data.Y = np.concatenate((col_test_data.Y, col_train_data.Y), axis=0)
+
+
             for model_id, model_name in enumerate(model_names):
                 print("---------------- Experiment for {} on {}({})".format(
                     model_name, Preprocessor.__name__, data_name))
