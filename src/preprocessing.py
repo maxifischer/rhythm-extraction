@@ -320,7 +320,7 @@ class RhythmData():
 
         X = X[:,na,:,:] # dont conv over the number of models
 
-        X = normalize_channels(X)
+        # X = normalize_channels(X)
 
         self.X, self.Y = X, Y 
 
@@ -341,10 +341,13 @@ class SpectroData():
                            fft_sizes=[1024, 2048, 4096]
                           )
 
-        X = normalize_channels(X)
+        # X = normalize_channels(X)
 
         Y = (Y + 1) / 2 
         self.X, self.Y = X, Y
+
+        print('SpectroData')
+        print('X.shape: {}'.format(X.shape))
 
         self.num_frequencies = X.shape[1]
         self.num_timesteps   = X.shape[2]
@@ -412,10 +415,13 @@ class MIRData():
         # 24 bands for superflux https://madmom.readthedocs.io/en/latest/modules/features/onsets.html?highlight=spectral_flux#madmom.features.onsets.superflux
 
         X, Y = get_dataset(music_dir, speech_dir, process_dir=get_dir_mir, file_suffix="_mir", num_samples=max_samples, hpool=0, wpool=0)
-        X = normalize_channels(X)
+        # X = normalize_channels(X)
 
         Y = (Y + 1) / 2 
         self.X, self.Y = X, Y
+
+        print('MIRDATA')
+        print('X.shape: {}'.format(self.X.shape))
 
         self.spectral_flux = X[0]
         self.super_flux = X[1]
