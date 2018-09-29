@@ -37,14 +37,14 @@ import json
 MUSIC = 1
 SPEECH = 0
 
-RUN_NAME='full-col-test--columbia-train--SpectroData'
+RUN_NAME='best-models-cross-dataset--GTZAN--RhythmData'
 NORMALIZE_CHANNELS=True
 
 # stop cv iterations and do not save the results if cvacc below threshold
 LAME_MODEL_THRESHOLD = 0.
-
+SKIP_DATA=[]
 use_whole_columbia_as_test = False
-
+ADD_NOVOCAL_TO_COLUMBIA = True
 
 if RUN_NAME.startswith('full-col-test'):
     _, data_name, prepr_name = RUN_NAME.split("--")
@@ -60,6 +60,7 @@ if RUN_NAME.startswith('full-col-test'):
     add_models = lambda: add_best_models_for_cross_dataset(prepr_name, data_name=data_name)
 
     ADD_NOVOCAL_TO_COLUMBIA = True
+    SKIP_DATA = ["GTZAN"] if data_name == "columbia-train" else ["columbia-train"]
 
 
 
@@ -85,6 +86,7 @@ elif RUN_NAME.startswith('best-models-cross-dataset'):
     add_models = lambda: add_best_models_for_cross_dataset(prepr_name)
     REPETITIONS = -1
     use_whole_columbia_as_test = True
+    SKIP_DATA = ["columbia-train"]
 
 elif RUN_NAME.startswith('mv_spectro'):
     NORMALIZE_CHANNELS=True
@@ -620,6 +622,7 @@ def run_on_all(experiment):
 
         if data_name == "columbia-test": continue # don't use the test set for training
         elif data_name == "columbia-train" and use_whole_columbia_as_test: continue # for cross-set mode don't train on columbia
+        if data_name in SKIP_DATA: continue
         for Preprocessor in Preprocessors:
             prepr_name = Preprocessor.__name__
             data = Preprocessor(**kwargs)
