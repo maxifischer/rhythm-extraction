@@ -138,9 +138,14 @@ def get_dataset(music_dir, speech_dir, hpool=16, wpool=15, shuffle=True,
     
     music_spectros  = process_dir(music_dir, num_samples, **kwargs)
     speech_spectros = process_dir(speech_dir, num_samples, **kwargs)
-    
+   
+    num_speech_samples = len(speech_spectros)
+
     #print(music_spectros.shape)
-    X = np.concatenate([music_spectros, speech_spectros], axis=0)#[:,:,:,:,na]
+    if num_speech_samples > 0:
+        X = np.concatenate([music_spectros, speech_spectros], axis=0)#[:,:,:,:,na]
+    else:
+        X = music_spectros
     # create labels, 1 for music, -1 for speech
     Y = ((np.arange(X.shape[0]) < music_spectros.shape[0]) - .5) * 2
     
@@ -290,7 +295,7 @@ def load_rhythm_feature_db(music_dir, speech_dir, num_samples=-1, reload=False):
     music = load_and_rhythm_preprocess(music_dir, num_samples)
     music_labels = [1] * len(music)
     speech = load_and_rhythm_preprocess(speech_dir, num_samples)
-    speech_labels = [-1] * len(music)
+    speech_labels = [-1] * len(speech)
 
     X = np.array(music + speech)
     y = np.array(music_labels + speech_labels)

@@ -37,7 +37,7 @@ import json
 MUSIC = 1
 SPEECH = 0
 
-RUN_NAME='full-col-test--GTZAN--Spectro'
+RUN_NAME='full-col-test--columbia-train--SpectroData'
 NORMALIZE_CHANNELS=True
 
 # stop cv iterations and do not save the results if cvacc below threshold
@@ -59,12 +59,11 @@ if RUN_NAME.startswith('full-col-test'):
 
     add_models = lambda: add_best_models_for_cross_dataset(prepr_name, data_name=data_name)
 
-
     ADD_NOVOCAL_TO_COLUMBIA = True
 
 
 
-if RUN_NAME == 'mv_mir-rhythm':
+elif RUN_NAME == 'mv_mir-rhythm':
     NORMALIZE_CHANNELS=True
     Preprocessors = [RhythmData, MIRData]  # , SpectroData]
     def add_models():
@@ -629,7 +628,7 @@ def run_on_all(experiment):
 
             if ADD_NOVOCAL_TO_COLUMBIA:
                 # add the novocal section to the columbia test set
-                columbia_novocal = Preprocessor(**columbia_test_novocalsl)
+                columbia_novocal = Preprocessor(**columbia_test_novocals)
                 col_test_data.X = np.vstack([col_test_data.X, columbia_novocal.X])
                 col_test_data.Y = np.concatenate((col_test_data.Y, columbia_novocal.Y), axis=0)
 
