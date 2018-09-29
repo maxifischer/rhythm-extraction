@@ -135,6 +135,10 @@ data_path = {
                 }
             }
 
+columbia_test_novocals= {'music_dir': '../data/columbia_music_speech_corpus/test/music/novocals',
+                     'speech_dir': '../data/columbia_music_speech_corpus/test/music/empty_dummy'
+        }
+
 na = np.newaxis
 
 
@@ -603,6 +607,13 @@ def run_on_all(experiment):
             data = Preprocessor(**kwargs)
 
             col_test_data = Preprocessor(**data_path["columbia-test"])
+
+            if ADD_NOVOCAL_TO_COLUMBIA:
+                # add the novocal section to the columbia test set
+                columbia_novocal = Preprocessor(**columbia_test_novocalsl)
+                col_test_data.X = np.vstack([col_test_data.X, columbia_novocal.X])
+                col_test_data.Y = np.concatenate((col_test_data.Y, columbia_novocal.Y), axis=0)
+
             if use_whole_columbia_as_test:
                 print('USING THE WHOLE COLUMBIA AS TEST SET')
                 # use whole colubmia dataset as test set (for cross-set evaluation)
