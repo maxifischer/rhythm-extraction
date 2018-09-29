@@ -57,7 +57,8 @@ if RUN_NAME.startswith('full-col-test'):
         Preprocessors = [SpectroData]
     REPETITIONS = -1
 
-    add_models = lambda: add_best_models_for_cross_dataset(prepr_name)
+    add_models = lambda: add_best_models_for_cross_dataset(prepr_name, data_name=data_name)
+
 
     ADD_NOVOCAL_TO_COLUMBIA = True
 
@@ -172,9 +173,9 @@ def add_mv_best():
     print('added bestparam models, now we have {} models'.format(len(model_names)))
     print(model_names)
 
-def add_best_models_for_cross_dataset(prepr_name):
+def add_best_models_for_cross_dataset(prepr_name, data_name="GTZAN"):
     results = pd.read_csv("results/merged.csv")
-    results = results.loc[(results.data_name=="GTZAN") & (results.prepr_name==prepr_name)].reset_index()
+    results = results.loc[(results.data_name==data_name) & (results.prepr_name==prepr_name)].reset_index()
     for row_id in results.groupby(["data_name", "prepr_name", "model_name"])["cv_acc"].idxmax().values:
         row = results.iloc[row_id]
         if row["model_name"] in ["mv_nn", "mv_svm"]:
