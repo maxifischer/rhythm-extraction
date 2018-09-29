@@ -37,13 +37,31 @@ import json
 MUSIC = 1
 SPEECH = 0
 
-RUN_NAME='best-models-cross-dataset--SpectroData'
+RUN_NAME='full-col-test--GTZAN--Spectro'
 NORMALIZE_CHANNELS=True
 
 # stop cv iterations and do not save the results if cvacc below threshold
 LAME_MODEL_THRESHOLD = 0.
 
 use_whole_columbia_as_test = False
+
+
+if RUN_NAME.startswith('full-col-test'):
+    _, data_name, prepr_name = RUN_NAME.split("--")
+    NORMALIZE_CHANNELS=True
+    if prepr_name == "RhythmData":
+        Preprocessors = [RhythmData]
+    elif prepr_name == "MIRData":
+        Preprocessors = [MIRData]
+    else:
+        Preprocessors = [SpectroData]
+    REPETITIONS = -1
+
+    add_models = lambda: add_best_models_for_cross_dataset(prepr_name)
+
+    ADD_NOVOCAL_TO_COLUMBIA = True
+
+
 
 if RUN_NAME == 'mv_mir-rhythm':
     NORMALIZE_CHANNELS=True
