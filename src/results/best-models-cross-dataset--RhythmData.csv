@@ -1,6 +1,6 @@
-cv_acc,cv_acc_nc,cv_acc_pc,cv_f1,data_name,hyper_params,is_normalized,model_name,param_c,param_gamma,param_linvar,prepr_name,test_acc,test_acc_nc,test_acc_pc,test_f1
--666.0,-666.0,-666.0,-666.0,GTZAN,"{""hidden_neurons"": [200, 200, 200], ""dropout"": 0.0}",1,mv_nn,,,,RhythmData,0.99375,0.9875,1.0,0.9937888198757764
--666.0,-666.0,-666.0,-666.0,GTZAN,"{""C"": 100.0, ""gamma"": 0.018873918221350997}",1,mv_svm,,,,RhythmData,0.975,0.9625,0.9875,0.9753086419753086
--666.0,-666.0,-666.0,-666.0,GTZAN,,1,simple_cnn,,,,RhythmData,0.9875,0.9746031641960144,1.0,0.9876980185508728
--666.0,-666.0,-666.0,-666.0,GTZAN,,1,linear,,,,RhythmData,0.9625,0.9424394249916077,0.9857142806053162,0.9596191763877868
--666.0,-666.0,-666.0,-666.0,GTZAN,,1,mv_linear,,,,RhythmData,0.98125,1.0,0.9625,0.980891719745223
+data_name,prepr_name,model_name,param_c,param_gamma,param_linvar,test_acc,test_f1,test_acc_pc,test_acc_nc,cv_acc,cv_f1,cv_acc_pc,cv_acc_nc,hyper_params,is_normalized
+GTZAN,RhythmData,mv_nn,,,,0.9834254143646409,0.9850746268656716,0.9801980198019802,0.9875,-666,-666,-666,-666,"{""hidden_neurons"": [200, 200, 200], ""dropout"": 0.0}",1
+GTZAN,RhythmData,mv_svm,,,,0.9723756906077348,0.9753694581280787,0.9801980198019802,0.9625,-666,-666,-666,-666,"{""C"": 100.0, ""gamma"": 0.018873918221350997}",1
+GTZAN,RhythmData,simple_cnn,,,,0.9834254143646409,0.9853793297024721,0.9826361513928156,0.9896002606133729,-666,-666,-666,-666,,1
+GTZAN,RhythmData,linear,,,,0.9558011053016832,0.9559649736183125,0.9586950840212364,0.95363843506871,-666,-666,-666,-666,,1
+GTZAN,RhythmData,mv_linear,,,,0.9834254143646409,0.9849246231155778,0.9702970297029703,1.0,-666,-666,-666,-666,,1

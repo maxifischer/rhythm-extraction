@@ -73,11 +73,12 @@ def get_spectrogram(path, sample_rate=None, fps=None, window=np.hanning, fft_siz
     spectros = []
     max_fft_size = np.max(fft_sizes)
     # sample_rate=None takes original sample_rate
-    signal = Signal(path, sample_rate=sample_rate)
+    # only take 30s snippets to align data
+    signal = Signal(path, sample_rate=sample_rate, start=0, stop=30)
     frames = FramedSignal(signal, fps=fps)
     channel_num = 0
     for fft_size in fft_sizes:
-        stft = ShortTimeFourierTransform(frames, window=window, fft_size=fft_size)
+        stft = ShortTimeFourierTransform(frames, window=window, fft_size=fft_size, circular_shift=True)
         spectro = LogarithmicSpectrogram(stft)
         if filtered:
             filtered_spectro = FilteredSpectrogram(spectro, filterbank=filterbank, num_bands=num_bands, fmin=fmin, fmax=fmax)
@@ -95,6 +96,11 @@ def get_spectrogram(path, sample_rate=None, fps=None, window=np.hanning, fft_siz
         final_spectro[:spectro.shape[1], :, channel] = spectro.T
     return final_spectro
 
+def get_list_of_files(dirName):
+    return [os.path.join(root, name)
+             for root, dirs, files in os.walk(dirName)
+             for name in files
+             if name.endswith((".wav"))]
 
 def get_dir_spectrograms(audio_dir, num_samples = -1, **kwargs):
     '''
@@ -106,8 +112,8 @@ def get_dir_spectrograms(audio_dir, num_samples = -1, **kwargs):
     # TODO:
     # add STFT options to the spectrogram (window size etc)
     # add possibility to use different options at the same time (add depth dimension, is there a problem with the resulting shape?)
+    audio_files = get_list_of_files(audio_dir)
 
-    audio_files = [f for f in listdir(audio_dir) if isfile(join(audio_dir, f))]
     if num_samples>0:
         audio_files = audio_files[:num_samples]
 
@@ -207,6 +213,7 @@ def mean_pool_signal(signal, factor):
     if len(signal.shape) == 1:
         signal=signal[:,na]
     L, D = signal.shape
+
     return signal.reshape(L//factor, factor, D).mean(axis=1)
 
 def concatenate_and_resample(signals, sample_down=True):
@@ -248,7 +255,7 @@ def load_db_from_disk(file_name):
     y_path = join(base, file_name+"_y.npy")
     return np.load(x_path), np.load(y_path)
 
-processors = [SpectralOnsetProcessor(),
+processors = [SpectralOnsetProcessor(fps=200),
     RNNOnsetProcessor(),
     CNNOnsetProcessor(),
     SpectralOnsetProcessor(onset_method='superflux', fps=200, filterbank=LogarithmicFilterbank, num_bands=24, log=np.log10),
@@ -262,7 +269,8 @@ def rhythm_features_for_signal(signal):
 
 def load_and_rhythm_preprocess(audio_dir, max_samples=-1):
     print('...load and preprocess files from folder')
-    audio_files = [f for f in listdir(audio_dir) if isfile(join(audio_dir, f))]
+
+    audio_files = get_list_of_files(audio_dir)
 
     if max_samples > 0:
         audio_files = audio_files[:max_samples]
@@ -273,8 +281,11 @@ def load_and_rhythm_preprocess(audio_dir, max_samples=-1):
     for ind, file_name in enumerate(audio_files):
         strt = time.time()
         
-        path = join(audio_dir, file_name)
-        signal = Signal(path)
+        if file_name.startswith('..'):
+            path = file_name
+        else:
+            path = join(audio_dir, file_name)
+        signal = Signal(path, start=0, stop=30)
         processed.append(rhythm_features_for_signal(signal))
        
         stp = time.time()
@@ -284,7 +295,6 @@ def load_and_rhythm_preprocess(audio_dir, max_samples=-1):
 
 def load_rhythm_feature_db(music_dir, speech_dir, num_samples=-1, reload=False):
     file_name = (music_dir + speech_dir).replace("/", "-").replace(".", "")
-
     try:
         assert not reload
         return load_db_from_disk(file_name)
@@ -365,7 +375,8 @@ def get_mir(audio_path):
     hop_length = 200
     # Spectral Flux/Flatness, MFCCs, SDCs
     spectrogram = madmom.audio.spectrogram.Spectrogram(audio_path, frame_size=2048, hop_size=hop_length, fft_size=4096)
-    audio = madmom.audio.signal.Signal(audio_path, dtype=float)
+    # only take 30s snippets to align data
+    audio = madmom.audio.signal.Signal(audio_path, dtype=float, start=0, stop=30)
    
     all_features = []
 
@@ -398,7 +409,7 @@ def get_dir_mir(audio_dir, num_samples = -1):
     # add STFT options to the spectrogram (window size etc)
     # add possibility to use different options at the same time (add depth dimension, is there a problem with the resulting shape?)
 
-    audio_files = [f for f in listdir(audio_dir) if isfile(join(audio_dir, f))]
+    audio_files = get_list_of_files(audio_dir)
     if num_samples>0:
         audio_files = audio_files[:num_samples]
 
@@ -406,10 +417,13 @@ def get_dir_mir(audio_dir, num_samples = -1):
     mirs = []
     for i, af in enumerate(audio_files):
         print("Load file {}/{} in {}".format(i+1, len(audio_files), audio_dir))
-        mirs.append(get_mir(join(audio_dir, af)))
-    mirs = np.array(mirs)
-    
-    return mirs
+        if af.startswith('..'):
+            path = af
+        else:
+            path = join(audio_dir, af)
+        mirs.append(get_mir(path))
+    print(mirs)
+    return np.ndarray(mirs, np.int32)
 
 
 class MIRData():

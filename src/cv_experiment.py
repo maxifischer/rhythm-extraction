@@ -43,7 +43,7 @@ NORMALIZE_CHANNELS=True
 # stop cv iterations and do not save the results if cvacc below threshold
 LAME_MODEL_THRESHOLD = 0.
 SKIP_DATA=[]
-use_whole_columbia_as_test = False
+use_whole_columbia_as_test = True
 ADD_NOVOCAL_TO_COLUMBIA = True
 
 if RUN_NAME.startswith('full-col-test'):
@@ -74,7 +74,7 @@ elif RUN_NAME == 'mv_mir-rhythm':
     REPETITIONS = 10
 
 elif RUN_NAME.startswith('best-models-cross-dataset'):
-    prepr_name = RUN_NAME.split("--")[1]
+    _, data_name, prepr_name = RUN_NAME.split("--")
     NORMALIZE_CHANNELS=True
     if prepr_name == "RhythmData":
         Preprocessors = [RhythmData]
@@ -86,7 +86,7 @@ elif RUN_NAME.startswith('best-models-cross-dataset'):
     add_models = lambda: add_best_models_for_cross_dataset(prepr_name)
     REPETITIONS = -1
     use_whole_columbia_as_test = True
-    SKIP_DATA = ["columbia-train"]
+    SKIP_DATA = ["GTZAN"] if data_name == "columbia-train" else ["columbia-train"]
 
 elif RUN_NAME.startswith('mv_spectro'):
     NORMALIZE_CHANNELS=True
@@ -152,6 +152,10 @@ data_path = {
                 "columbia-test": {
                     'music_dir': '../data/columbia_music_speech_corpus/test/music/vocals',
                     'speech_dir': '../data/columbia_music_speech_corpus/test/speech'
+                },
+                "musan": {
+                    'music_dir': '../data/musan/music',
+                    'speech_dir': '../data/musan/speech'
                 }
             }
 
@@ -281,7 +285,7 @@ def evaluate_on_test_set(model, model_name, Xtest, Ytest, return_conf_matrix=Fal
         else:
             test_acc = model.evaluate(Xtest, Y)
     except ValueError:
-        # if the test set has a different time length then the train set, try to reshape the model and test then
+        # if the test set has a different time length than the train set, try to reshape the model and test then
         test_input_shape = Xtest.shape[1:]
         model_weights = model.get_weights()
         model = reshape_keras_conv_input(model_name, test_input_shape, model_weights)
