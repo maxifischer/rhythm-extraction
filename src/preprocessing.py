@@ -78,7 +78,7 @@ def get_spectrogram(path, sample_rate=None, fps=None, window=np.hanning, fft_siz
     frames = FramedSignal(signal, fps=fps)
     channel_num = 0
     for fft_size in fft_sizes:
-        stft = ShortTimeFourierTransform(frames, window=window, fft_size=fft_size, circular_shift=True)
+        stft = ShortTimeFourierTransform(frames, window=window, fft_size=fft_size)
         spectro = LogarithmicSpectrogram(stft)
         if filtered:
             filtered_spectro = FilteredSpectrogram(spectro, filterbank=filterbank, num_bands=num_bands, fmin=fmin, fmax=fmax)
@@ -120,8 +120,15 @@ def get_dir_spectrograms(audio_dir, num_samples = -1, **kwargs):
     # calc spectrogram for all files in the folder
     spectrograms = []
     for i, af in enumerate(audio_files):
+
+        if af.startswith('..'):
+            path = af
+        else:
+            path = join(audio_dir, af)
+
         print("Load file {}/{} in {}".format(i+1, len(audio_files), audio_dir))
-        spectrograms.append(get_spectrogram(join(audio_dir, af), **kwargs))
+        spec = get_spectrogram(path, **kwargs)
+        spectrograms.append(spec)
     spectrograms = np.array(spectrograms)
     
     return spectrograms
@@ -255,10 +262,10 @@ def load_db_from_disk(file_name):
     y_path = join(base, file_name+"_y.npy")
     return np.load(x_path), np.load(y_path)
 
-processors = [SpectralOnsetProcessor(fps=200),
+processors = [SpectralOnsetProcessor(fps=400),
     RNNOnsetProcessor(),
     CNNOnsetProcessor(),
-    SpectralOnsetProcessor(onset_method='superflux', fps=200, filterbank=LogarithmicFilterbank, num_bands=24, log=np.log10),
+    SpectralOnsetProcessor(onset_method='superflux', fps=400, filterbank=LogarithmicFilterbank, num_bands=24, log=np.log10),
     RNNDownBeatProcessor(),
     lambda sig: np.array(RNNBeatProcessor(post_processor=None)(sig)).T
     ]
@@ -285,9 +292,24 @@ def load_and_rhythm_preprocess(audio_dir, max_samples=-1):
             path = file_name
         else:
             path = join(audio_dir, file_name)
+            
+        # uncommented stuff for framewise analysis with overlapping 6s snippets (took to long + MemoryError)
+        #full_snippet = 0
+        #for start_index in range(0, 3000, 3):
+            #try:
+                #signal = Signal(path, start=start_index, stop=start_index+6)
+                #    if start_index == 0:
+                #        full_snippet = len(signal)
+                #    if len(signal) == full_snippet:
+                #        print("I just processed the {}s snippet".format(start_index))
+            #except ValueError as error:
+            #    break
+            #    print("Nope didn't work".format(error))
+            
         signal = Signal(path, start=0, stop=30)
+            
         processed.append(rhythm_features_for_signal(signal))
-       
+
         stp = time.time()
         print('finished treating file {}/{} in {:4.3f}s'.format(ind+1, num_files, stp-strt))
         
@@ -332,7 +354,12 @@ class RhythmData():
         Y = (Y + 1) / 2 
 
         # X is in (N,L,D) format
-
+        X = np.array(X)
+        for i in range(len(X)):
+            print(X[i].shape)
+        X = np.stack(X, axis=0)
+        print(X)
+        print(X.shape)
         X = X[:,na,:,:] # dont conv over the number of models
 
         # X = normalize_channels(X)
@@ -352,7 +379,7 @@ class SpectroData():
         X, Y = get_dataset(music_dir, speech_dir, process_dir=get_dir_spectrograms,
                            hpool=0, wpool=0, 
                            num_samples=max_samples, shuffle=True, reload=False,
-                           window=np.hanning, fps=100, num_bands=3, fmin=30, fmax=17000,
+                           sample_rate=44100, window=np.hanning, fps=200, num_bands=3, fmin=30, fmax=17000,
                            fft_sizes=[1024, 2048, 4096]
                           )
 
@@ -371,13 +398,15 @@ class SpectroData():
 
 
 def get_mir(audio_path):
-
-    hop_length = 200
+    hop_length = 100
+    
+    # only take 30s snippets to align data of different datasets
+    # songs have different sample rates, take the most common for all of them (41000Hz)
+    audio = madmom.audio.signal.Signal(audio_path, dtype=float, start=0, stop=30, sample_rate=41000)
+    
     # Spectral Flux/Flatness, MFCCs, SDCs
-    spectrogram = madmom.audio.spectrogram.Spectrogram(audio_path, frame_size=2048, hop_size=hop_length, fft_size=4096)
-    # only take 30s snippets to align data
-    audio = madmom.audio.signal.Signal(audio_path, dtype=float, start=0, stop=30)
-   
+    spectrogram = madmom.audio.spectrogram.Spectrogram(audio, hop_size=hop_length)
+    
     all_features = []
 
     #print(spectrogram.shape)
@@ -392,9 +421,16 @@ def get_mir(audio_path):
     # librosa features
     libr_features = [spectral_centroid(audio, hop_length=hop_length), spectral_bandwidth(audio,hop_length=hop_length), spectral_flatness(audio,hop_length=hop_length), spectral_rolloff(audio,hop_length=hop_length), rmse(audio, hop_length=hop_length), zero_crossing_rate(audio, hop_length=hop_length)]#, mfcc(audio)])
     for libr in libr_features:
+        # prevent different shapes of madmom and librosa
+        if libr.shape[1] > all_features[0].shape[0]:
+            min_len = all_features[0].shape[0]
+            #print(min_len)
+            libr = libr[:,:all_features[0].shape[0]]
+            #print(libr.shape)
         all_features.append(np.squeeze(libr, axis=0))
-    # for feature in all_features:
+    #for feature in all_features:
     #     print(feature.shape)
+            
     X = np.stack(all_features, axis=1)[na,:,:]
     return X
 
@@ -422,8 +458,7 @@ def get_dir_mir(audio_dir, num_samples = -1):
         else:
             path = join(audio_dir, af)
         mirs.append(get_mir(path))
-    print(mirs)
-    return np.ndarray(mirs, np.int32)
+    return np.array(mirs)
 
 
 class MIRData():
