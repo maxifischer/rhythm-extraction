@@ -38,13 +38,12 @@ import json
 MUSIC = 1
 SPEECH = 0
 
-RUN_NAME='best-models-cross-dataset--MUSANtraintestnormcv--All'
-NORMALIZE_CHANNELS=1
+RUN_NAME='best-models-cross-dataset--musan--spectro_crossdataset'
+NORMALIZE_CHANNELS=True
 
 # stop cv iterations and do not save the results if cvacc below threshold
-LAME_MODEL_THRESHOLD = 0.
+LAME_MODEL_THRESHOLD = 0.9
 SKIP_DATA=[]
-TEST_DATA=[]
 use_whole_columbia_as_test = True
 ADD_NOVOCAL_TO_COLUMBIA = True
 
@@ -63,15 +62,21 @@ if RUN_NAME.startswith('full-col-test'):
 
     ADD_NOVOCAL_TO_COLUMBIA = True
     SKIP_DATA = ["GTZAN"] if data_name == "columbia-train" else ["columbia-train"]
-    TEST_DATA = ["GTZAN"]
 
-
+elif RUN_NAME == 'nn_grid_search':
+    NORMALIZE_CHANNELS=True
+    Preprocessors = [RhythmData, MIRData, SpectroData]
+    def add_models():
+        add_nn_grid()
+    REPETITIONS = 10
+    use_whole_columbia_as_test = False
+    SKIP_DATA = ['GTZAN', 'columbia-train']
 
 elif RUN_NAME == 'mv_mir-rhythm':
     NORMALIZE_CHANNELS=True
-    Preprocessors = [RhythmData, MIRData]  # , SpectroData]
+    Preprocessors = [RhythmData, MIRData] # , SpectroData]
     def add_models():
-        add_mv_best()
+        add_mv_grid()
         add_deep_nns()
         #add_mv_grid()
     REPETITIONS = 10
@@ -85,18 +90,20 @@ elif RUN_NAME.startswith('best-models-cross-dataset'):
     #    Preprocessors = [MIRData]
     #else:
     #    Preprocessors = [SpectroData]
-    Preprocessors = [RhythmData, MIRData, SpectroData]
+    Preprocessors = [SpectroData]
     
-    #add_models = lambda: add_best_models_for_cross_dataset(prepr_name)
-    def add_models():
-        add_mv_grid()
-        add_deep_nns()
+    add_models = lambda: add_best_models_for_cross_dataset('SpectroData', "musan")
+    #def add_models():
+        #add_svm_grid()
+        #model_names.append("mv_svm--{}".format(json.dumps({"C": 53.10526315789473, "gamma": 0.09236708571873885})))
         #add_mv_grid()
         #model_names.extend(["simple_cnn","mv_linear"])
-    REPETITIONS = 10
+    REPETITIONS = 0
+    ADD_NOVOCAL_TO_COLUMBIA = True
     use_whole_columbia_as_test = True
     #SKIP_DATA = ["GTZAN"] if data_name == "columbia-train" else ["columbia-train"]
-    SKIP_DATA = ["musan"]
+    #SKIP_DATA = ["musan"]
+    SKIP_DATA = ['GTZAN', 'columbia-train']
 
 elif RUN_NAME.startswith('mv_spectro'):
     NORMALIZE_CHANNELS=True
@@ -105,7 +112,6 @@ elif RUN_NAME.startswith('mv_spectro'):
         #add_mv_best()
         add_mv_grid()
         add_deep_nns()
-        model_names.extend(["simple_cnn", "linear", "mv_linear"])
     REPETITIONS = 10
 
 elif RUN_NAME == 'mv_linear-all':
@@ -193,14 +199,17 @@ def add_mv_best():
     print('added bestparam models, now we have {} models'.format(len(model_names)))
     print(model_names)
 
+grid_search_csv = "results/musan-merged.csv"#"results/merged.csv"
 def add_best_models_for_cross_dataset(prepr_name, data_name="GTZAN"):
-    results = pd.read_csv("results/merged.csv")
+    results = pd.read_csv(grid_search_csv)
+    print(results)
     results = results.loc[(results.data_name==data_name) & (results.prepr_name==prepr_name)].reset_index()
+    print(results)
     for row_id in results.groupby(["data_name", "prepr_name", "model_name"])["cv_acc"].idxmax().values:
         row = results.iloc[row_id]
         if row["model_name"] in ["mv_nn", "mv_svm"]:
             model_names.append(row["model_name"] + "--" + row["hyper_params"])
-    model_names.extend(["simple_cnn", "linear", "mv_linear"])
+    #model_names.extend(["simple_cnn", "linear", "mv_linear"])
     print('JENE MODELS:')
     print(model_names)
     print(' es sind viele: {}'.format(len(model_names)))
@@ -220,17 +229,21 @@ def add_mv_grid():
             {"hidden_neurons": [num_neurons] * num_layers,
              "dropout": dropout})))
 
+def add_nn_grid():
+    # hidden_neurons=[100], dropout=0
+    for num_neurons, num_layers, dropout in product([50, 100, 200], [1, 2, 3], [0., 0.25, 0.5]):
+        model_names.append("mv_nn--{}".format(json.dumps(
+            {"hidden_neurons": [num_neurons] * num_layers,
+             "dropout": dropout})))
+
 
 # SVM gridsearch values
 def add_svm_grid():
-    svm_models = ['meansvm']# 'patchsvm']
-    C_values     = np.linspace(1, 100, 20)# [96.]  #np.linspace(1., 100, 2)
-    gamma_values = np.logspace(-10, 0, 30)# [1e-6] #np.logspace(-10, 0, 2)
+    C_values = np.linspace(1, 100, 20)  # [96.]  #np.linspace(1., 100, 2)
+    gamma_values = np.logspace(-10, 0, 30)  # [1e-6] #np.logspace(-10, 0, 2)
+    for c, gamma in product(C_values, gamma_values):
+        model_names.append("mv_svm--{}".format(json.dumps({"C": c, "gamma": gamma})))
 
-    for svm_model in svm_models:
-        for c in C_values:
-            for gamma in gamma_values:
-                model_names.append('{}--{}--{}'.format(svm_model, c, gamma))
 #model_names = []
 #model_names.extend(["simple_cnn--linvar", "simple_cnn", "linear--linvar", "linear"])# "linear", "linear--linvar", "simple_cnn", "simple_cnn--linvar"]
 
@@ -612,25 +625,26 @@ def cv_experiment(data, model_name, col_test_data, epochs=100, batch_size=8, nfo
             Xtest  = col_test_data.X
             Ytest  = col_test_data.Y
 
-        
+
     else:
         # if no test set take train test split of data
         Xtrain, Xtest, Ytrain, Ytest = train_test_split(data.X, data.Y, train_size=0.8, random_state=42)
         if norm_channels:
             Xtrain, stddev = normalize_channels(Xtrain.copy())
             Xtest  = Xtest.copy() / stddev
-            
-            
+    
     train_model(model, Xtrain, Ytrain)
 
-    test_acc = evaluate_on_test_set(model, model_name, Xtest, Ytest)
+    test_acc = evaluate_on_test_set(model, model_name, Xtest, Ytest)        
+            
+    
 
     print('cvacc output is of length {}'.format(len(cvacc)))
 
     K.clear_session()
     if len(cvacc) == 5:
         cvacc = cvacc[1:]
-    if len(test_acc) == 5:
+    if (test_acc!=None) and (len(test_acc) == 5):
         test_acc = test_acc[1:]
 
     result = (test_acc, cvacc)
@@ -642,84 +656,76 @@ def run_on_all(experiment):
     cols = ['data_name','prepr_name','model_name', 'param_c', 'param_gamma', 'param_linvar', 'test_acc', 'test_f1',
             'test_acc_pc', 'test_acc_nc', 'cv_acc', 'cv_f1', 'cv_acc_pc', 'cv_acc_nc', 'hyper_params', 'is_normalized']
     results = pd.DataFrame(columns=cols)
-    data_name = "musan"
-    kwargs = data_path["musan"]
-    #for data_name, kwargs in data_path.items():
+    for data_name, kwargs in data_path.items():
 
-    #if data_name == "columbia-test": continue # don't use the test set for training
-    #elif data_name == "columbia-train" and use_whole_columbia_as_test: continue # for cross-set mode don't train on columbia
-    #if data_name in SKIP_DATA: continue
-    print('Processing data name: '.format(data_name))
-    for Preprocessor in Preprocessors:
-        prepr_name = Preprocessor.__name__
-        data = Preprocessor(**kwargs)
+        if data_name == "columbia-test": continue # don't use the test set for training
+        elif data_name == "columbia-train" and use_whole_columbia_as_test: continue # for cross-set mode don't train on columbia
+        if data_name in SKIP_DATA: continue
+        for Preprocessor in Preprocessors:
+            prepr_name = Preprocessor.__name__
+            data = Preprocessor(**kwargs)
 
-        #col_test_data = Preprocessor(**data_path["columbia-test"])
-        musan_test_data = Preprocessor(**data_path["musan"])
-        #gtzan_test_data = Preprocessor(**data_path["GTZAN"])
+            col_test_data = Preprocessor(**data_path["columbia-test"])
 
-        #if ADD_NOVOCAL_TO_COLUMBIA:
-            # add the novocal section to the columbia test set
-        #    columbia_novocal = Preprocessor(**columbia_test_novocals)
-        #    col_test_data.X = np.vstack([col_test_data.X, columbia_novocal.X])
-        #    col_test_data.Y = np.concatenate((col_test_data.Y, columbia_novocal.Y), axis=0)
+            if ADD_NOVOCAL_TO_COLUMBIA:
+                # add the novocal section to the columbia test set
+                columbia_novocal = Preprocessor(**columbia_test_novocals)
+                col_test_data.X = np.vstack([col_test_data.X, columbia_novocal.X])
+                col_test_data.Y = np.concatenate((col_test_data.Y, columbia_novocal.Y), axis=0)
 
-        #if use_whole_columbia_as_test:
-        #    print('USING THE WHOLE COLUMBIA AS TEST SET')
-            # use whole colubmia dataset as test set (for cross-set evaluation)
-        #    col_train_data = Preprocessor(**data_path["columbia-train"])
-        #    col_test_data.X = np.vstack([col_test_data.X, col_train_data.X])
-        #    col_test_data.Y = np.concatenate((col_test_data.Y, col_train_data.Y), axis=0)
+            if use_whole_columbia_as_test:
+                print('USING THE WHOLE COLUMBIA AS TEST SET')
+                # use whole columbia dataset as test set (for cross-set evaluation)
+                col_train_data = Preprocessor(**data_path["columbia-train"])
+                col_test_data.X = np.vstack([col_test_data.X, col_train_data.X])
+                col_test_data.Y = np.concatenate((col_test_data.Y, col_train_data.Y), axis=0)
 
-        #all_train_data = data
-        #all_train_data.X = np.vstack([data.X, col_test_data.X])
-        #all_train_data.Y = np.concatenate((data.Y, col_test_data.Y), axis=0)
-        
-        for model_id, model_name in enumerate(model_names):
-            print("---------------- Experiment for {} on {}({})".format(
-                model_name, Preprocessor.__name__, data_name))
-            try:
-                result = experiment(musan_test_data, model_name, None)
-            except LameModelException as e:
-                print(type(e), e)
-                continue
-            split_model = model_name.split('--')
-            print('finished cv, result:')
-            print(result)
 
-            hyper_params = ""
-
-            if split_model[-1] == 'linvar':
-                param_linvar = True
-            else:
-                param_linvar = None
-
-            if split_model[0].startswith("mv"):
+            for model_id, model_name in enumerate(model_names):
+                print("---------------- Experiment for {} on {}({})".format(
+                    model_name, Preprocessor.__name__, data_name))
                 try:
-                    hyper_params = split_model[1]
-                except: pass
+                    result = experiment(data, model_name, None)
+                except LameModelException as e:
+                    print(type(e), e)
+                    continue
+                split_model = model_name.split('--')
+                print('finished cv, result:')
+                print(result)
 
-            param_c, param_gamma = (None, None)
-            if model_name.startswith("mean"):
-                if len(split_model) > 2:
-                    param_c, param_gamma = split_model[1:3]
+                hyper_params = ""
 
-            test_acc, test_f1, test_acc_pc, test_acc_nc = result[0]
-            cv_acc, cv_f1, cv_acc_pc, cv_acc_nc = result[1]
+                if split_model[-1] == 'linvar':
+                    param_linvar = True
+                else:
+                    param_linvar = None
+
+                if split_model[0].startswith("mv"):
+                    try:
+                        hyper_params = split_model[1]
+                    except: pass
+
+                param_c, param_gamma = (None, None)
+                if model_name.startswith("mean"):
+                    if len(split_model) > 2:
+                        param_c, param_gamma = split_model[1:3]
+
+                test_acc, test_f1, test_acc_pc, test_acc_nc = result[0]
+                cv_acc, cv_f1, cv_acc_pc, cv_acc_nc = result[1]
 
 
-            model_name = split_model[0]
-            vals = pd.DataFrame({'data_name': [data_name],'prepr_name': [prepr_name],'model_name': [split_model[0]], 'param_c': [param_c],
-                   'param_gamma': [param_gamma], 'param_linvar': [param_linvar], 'test_acc': [test_acc],
-                   'test_f1': [test_f1], 'test_acc_pc': [test_acc_pc], 'test_acc_nc': [test_acc_nc],
-                   'cv_acc': [cv_acc], 'cv_f1': [cv_f1], 'cv_acc_pc': [cv_acc_pc], 'cv_acc_nc': [cv_acc_nc],
-                   'hyper_params': [hyper_params], 'is_normalized': [1 if NORMALIZE_CHANNELS else 0]})
-            results = results.append(vals, ignore_index=True)
+                model_name = split_model[0]
+                vals = pd.DataFrame({'data_name': [data_name],'prepr_name': [prepr_name],'model_name': [split_model[0]], 'param_c': [param_c],
+                       'param_gamma': [param_gamma], 'param_linvar': [param_linvar], 'test_acc': [test_acc],
+                       'test_f1': [test_f1], 'test_acc_pc': [test_acc_pc], 'test_acc_nc': [test_acc_nc],
+                       'cv_acc': [cv_acc], 'cv_f1': [cv_f1], 'cv_acc_pc': [cv_acc_pc], 'cv_acc_nc': [cv_acc_nc],
+                       'hyper_params': [hyper_params], 'is_normalized': [1 if NORMALIZE_CHANNELS else 0]})
+                results = results.append(vals, ignore_index=True)
 
 
-            if model_id % 5 == 0:
-                print(results)
-                results.to_csv("cv_temp_results.csv", index=False)
+                if model_id % 10 == 0:
+                    print(results)
+                    results.to_csv("cv_temp_results.csv", index=False)
 
     return results
 
